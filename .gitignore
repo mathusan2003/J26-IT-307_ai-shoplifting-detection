@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Secrets — .env.example is the committed template
+.env
+.env.*
+!.env.example
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Experiment trackers
+wandb/
+mlruns/
+
+# Large model weights. Keep configs, notes, and .gitkeep files in models/.
+# If a small weight file must be committed, add it explicitly with git add -f.
+*.pt
+*.pth
+*.onnx
+*.weights
+*.engine
+*.tflite
+
+# Video files. Keep them local unless the team explicitly agrees to commit one.
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.wmv
+*.webm
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Local datasets. Folder placeholders stay in git.
+data/raw/**
+!data/raw/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+data/samples/**
+!data/samples/.gitkeep
+
+# Generated module outputs. Folder placeholders stay in git.
+**/outputs/**
+!**/outputs/.gitkeep
+
+# Dissertation artefacts. Folder placeholders and results/README.md stay in git.
+results/screenshots/**
+!results/screenshots/.gitkeep
+results/videos/**
+!results/videos/.gitkeep
+results/reports/**
+!results/reports/.gitkeep
