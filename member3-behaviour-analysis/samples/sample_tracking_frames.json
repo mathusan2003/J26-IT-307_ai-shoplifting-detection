@@ -1,0 +1,45 @@
+[
+  {
+    "frame_id": 100,
+    "timestamp": "10:15:20",
+    "tracks": [
+      {
+        "person_id": 12,
+        "center": [450, 320],
+        "zone": "Shelf_A"
+      },
+      {
+        "person_id": 7,
+        "center": [100, 80],
+        "zone": "Entrance"
+      }
+    ]
+  },
+  {
+    "frame_id": 110,
+    "timestamp": "10:15:30",
+    "tracks": [
+      {
+        "person_id": 12,
+        "center": [455, 325],
+        "zone": "Shelf_A"
+      },
+      {
+        "person_id": 7,
+        "center": [140, 90],
+        "zone": "Aisle_1"
+      }
+    ]
+  },
+  {
+    "frame_id": 150,
+    "timestamp": "10:16:10",
+    "tracks": [
+      {
+        "person_id": 12,
+        "center": [520, 330],
+        "zone": "Shelf_B"
+      }
+    ]
+  }
+]

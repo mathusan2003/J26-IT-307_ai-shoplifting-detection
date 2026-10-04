@@ -24,23 +24,58 @@ An ordered sequence of tracking results from Member 2. Each frame looks like:
 ```json
 {
   "frame_id": 100,
+  "timestamp": "10:15:20",
   "tracks": [
     {
       "person_id": 12,
-      "bbox": [100, 120, 250, 400],
-      "center": [175, 260]
+      "center": [450, 320],
+      "zone": "Shelf_A"
     }
   ]
 }
 ```
 
-Group records by `person_id` and read them in `frame_id` order. If Member 2 is not ready, use a hand-written sequence in this shape.
+The shared tracking contract still works when `timestamp` and `zone` are absent. In that case the history stores `null` for those fields and reads position from `center`, `position`, or the centre of `bbox`. `shelf` is accepted as another name for `zone`.
 
-Optional thresholds and zone settings belong in `configs/` once implementation starts. Any new indicator name must be added to [docs/api-contract.md](../docs/api-contract.md) before Member 4 relies on it.
+Group records by `person_id` and keep them in `frame_id` order. A hand-written sequence in this shape is in `samples/sample_tracking_frames.json`.
 
-## Expected output
+Optional thresholds and zone settings belong in `configs/` when behaviour rules are added. Any new indicator name must be added to [docs/api-contract.md](../docs/api-contract.md) before Member 4 relies on it.
 
-One behaviour result per person, not per frame:
+## Phase 1 output — movement history
+
+Phase 1 writes one movement history per person. This is the input later behaviour checks will use. It is not the behaviour result Member 4 reads.
+
+```json
+{
+  "person_id": 12,
+  "movement_history": [
+    {
+      "frame_id": 100,
+      "timestamp": "10:15:20",
+      "position": [450, 320],
+      "zone": "Shelf_A"
+    }
+  ]
+}
+```
+
+A full sequence is a JSON array of these objects, ordered by `person_id`.
+
+Build it from a tracking file, from this folder:
+
+```bash
+python src/build_movement_history.py samples/sample_tracking_frames.json
+```
+
+Run the Phase 1 tests from this folder:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+## Expected output — later behaviour result
+
+One behaviour result per person, not per frame. Loitering, repeated shelf visits, and the behaviour score are later phases:
 
 ```json
 {
@@ -71,11 +106,12 @@ Member 4 reads these behaviour results in the risk prediction module. Until `int
 
 | Path | Use |
 | --- | --- |
-| `src/` | Behaviour analysis code, when implementation starts |
+| `src/` | Movement history, and later behaviour checks |
+| `samples/` | Small tracking sequences used to exercise this module |
 | `tests/` | Tests for this module only |
 | `configs/` | Thresholds, zones, and related settings |
 | `outputs/` | Local behaviour JSON. Not committed |
 
 ## Status
 
-Structure only. Implementation has not started.
+Phase 1 movement history is implemented. Loitering, repeated shelf visits, abnormal behaviour, and the behaviour score are not implemented yet.
