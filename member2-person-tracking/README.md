@@ -1,72 +1,57 @@
-# Person Tracking Module
+# Component 2 — Multi-Person Tracking
 
-## Purpose
-
-Track people across video frames and keep a stable `person_id` for each person. This module turns per-frame detections into positions over time. It does not decide whether movement is suspicious and it does not produce a risk level.
-
-Expected later technology may include ByteTrack or DeepSORT. The team has not chosen yet. No tracker is included.
-
-## Responsible member
-
-Member 2.
-
-Work only in `member2-person-tracking/`. Use the branch `member2-person-tracking`. Other members may read this folder. They should not overwrite it.
-
-## Expected input
-
-Detection results from Member 1, one JSON object per frame:
-
-```json
-{
-  "frame_id": 100,
-  "detections": [
-    {
-      "class": "person",
-      "confidence": 0.92,
-      "bbox": [100, 120, 250, 400]
-    }
-  ]
-}
-```
-
-Use `person` detections. Ignore other classes unless [docs/api-contract.md](../docs/api-contract.md) is updated. If Member 1 is not ready, use a small hand-written JSON file in the same shape.
-
-Optional local settings belong in `configs/` once implementation starts.
-
-## Expected output
-
-One tracking result per frame:
-
-```json
-{
-  "frame_id": 100,
-  "tracks": [
-    {
-      "person_id": 12,
-      "bbox": [100, 120, 250, 400],
-      "center": [175, 260]
-    }
-  ]
-}
-```
-
-`person_id` must stay the same for the same person across frames of one video. `bbox` uses `[x_min, y_min, x_max, y_max]` pixels. `center` is `[x, y]` pixels.
-
-Write local results under `outputs/`. Do not commit them.
-
-## Future integration point
-
-Member 3 reads an ordered sequence of these tracking results in the behaviour analysis module. Until `integration/pipeline/` exists, hand off JSON files that match the contract. Do not change Member 1's detector from this folder.
-
-## Folder guide
-
-| Path | Use |
-| --- | --- |
-| `src/` | Tracking code, when implementation starts |
-| `tests/` | Tests for this module only |
-| `configs/` | Tracker settings |
-| `outputs/` | Local tracking JSON. Not committed |
+This isolated module tracks `person` detections from Member 1 and writes the
+contract-compliant tracking sequence consumed by Member 3. It uses a
+ByteTrack-style two-pass IoU association strategy plus a constant-velocity
+Kalman filter for brief missed detections. It also includes independent retail
+zone dwell and transition analytics.
 
 ## Status
 
-Structure only. Implementation has not started.
+- [x] YOLOv8 person-detection adapter (`src/detector.py`)
+- [x] Two-pass tracker and motion prediction (`src/tracker.py`)
+- [x] Polygon zone analytics (`src/zone_analytics.py`)
+- [x] Contract-formatted JSON writer (`main.py`)
+- [x] Unit tests for identity, zones, and evaluation metrics
+- [x] MOT evaluation CLI for IDSW, IDF1, MOTA, occlusion recovery, and FPS helpers
+- [ ] Run the evaluation on labelled retail test clips
+
+## Local use
+
+From this directory, provide one detection-frame object or a list of them:
+
+```powershell
+python main.py path/to/detections.json --output outputs/tracking_log.json
+python -m unittest discover -s tests -v
+```
+
+`main.py` emits only the fields currently approved in `docs/api-contract.md`:
+`frame_id`, `tracks[].person_id`, `tracks[].bbox`, and `tracks[].center`.
+Zone state remains internal so it does not change the shared handoff contract.
+
+## Evaluation
+
+Create a locally labelled ground-truth JSON sequence using the same frame and
+track structure as the tracking output, but with the real `person_id` values.
+Then run:
+
+```powershell
+.\.venv\Scripts\python.exe evaluate.py outputs/tracking_log.json path/to/ground_truth.json
+```
+
+The resulting `outputs/evaluation_metrics.json` reports `id_switches`,
+`idf1`, `mota`, false positives/negatives, and occlusion recovery for a
+15-frame-or-longer missed-detection interval. The `measure_fps` helper in
+`src/evaluation.py` measures detector/tracker FPS after warm-up frames.
+
+For direct frame detection, install `ultralytics` in the team's agreed
+environment and place `yolov8n.pt` under `models/` (model weights are ignored
+by Git). The provided zones target a 1280×720 view; calibrate
+`configs/zones.json` for the actual camera before evaluation.
+
+## Evaluation reporting
+
+Use annotated clips with ground truth to report ID switches (IDSW), MOTA, and
+IDF1. Measure FPS around the complete detector-to-tracker loop after a warmup,
+and report hardware, input resolution, detector weights, and thresholds. The
+target is at least 25 FPS.
