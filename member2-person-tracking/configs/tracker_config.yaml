@@ -1,0 +1,6 @@
+# ByteTrack-style association settings. Frame rate is used for timestamps.
+high_confidence_threshold: 0.50
+low_confidence_threshold: 0.10
+match_iou_threshold: 0.30
+max_missed_frames: 30
+fps: 30
