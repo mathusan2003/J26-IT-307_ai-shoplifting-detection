@@ -14,6 +14,7 @@ zone dwell and transition analytics.
 - [x] Contract-formatted JSON writer (`main.py`)
 - [x] Unit tests for identity, zones, and evaluation metrics
 - [x] MOT evaluation CLI for IDSW, IDF1, MOTA, occlusion recovery, and FPS helpers
+- [x] OpenCV ID/trajectory overlay and annotated video export (`demo_track.py`)
 - [ ] Run the evaluation on labelled retail test clips
 
 ## Local use
@@ -21,13 +22,19 @@ zone dwell and transition analytics.
 From this directory, provide one detection-frame object or a list of them:
 
 ```powershell
-python main.py path/to/detections.json --output outputs/tracking_log.json
+python -m pip install -r requirements.txt
+python main.py tests/fixtures/sample_detections.json --output outputs/tracking_log.json
+python demo_track.py --detections tests/fixtures/sample_detections.json --video path/to/clip.mp4 --output-video outputs/annotated.mp4 --output-json outputs/tracking_log.json
 python -m unittest discover -s tests -v
 ```
 
-`main.py` emits only the fields currently approved in `docs/api-contract.md`:
+`main.py` and `demo_track.py` emit only the fields currently approved in `docs/api-contract.md`:
 `frame_id`, `tracks[].person_id`, `tracks[].bbox`, and `tracks[].center`.
-Zone state remains internal so it does not change the shared handoff contract.
+Zone names can appear on the annotated video. They are not written into the shared handoff JSON.
+
+`demo_track.py` maps video frame 0 to the first `frame_id` in the detection file unless you pass `--frame-id-start`. If `--detections` is omitted, it runs the optional YOLOv8 adapter on the video instead.
+
+A contract-shaped detection sample lives at `tests/fixtures/sample_detections.json`.
 
 ## Evaluation
 

@@ -1,0 +1,31 @@
+[
+  {
+    "frame_id": 0,
+    "detections": [
+      {"class": "person", "confidence": 0.93, "bbox": [20, 120, 110, 300]},
+      {"class": "person", "confidence": 0.91, "bbox": [980, 80, 1080, 320]},
+      {"class": "cart", "confidence": 0.6, "bbox": [500, 200, 580, 280]}
+    ]
+  },
+  {
+    "frame_id": 1,
+    "detections": [
+      {"class": "person", "confidence": 0.92, "bbox": [48, 122, 138, 302]},
+      {"class": "person", "confidence": 0.88, "bbox": [960, 84, 1060, 324]}
+    ]
+  },
+  {
+    "frame_id": 2,
+    "detections": [
+      {"class": "person", "confidence": 0.24, "bbox": [76, 124, 166, 304]},
+      {"class": "person", "confidence": 0.86, "bbox": [940, 88, 1040, 328]}
+    ]
+  },
+  {
+    "frame_id": 3,
+    "detections": [
+      {"class": "person", "confidence": 0.9, "bbox": [104, 126, 194, 306]},
+      {"class": "person", "confidence": 0.84, "bbox": [920, 92, 1020, 332]}
+    ]
+  }
+]
