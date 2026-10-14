@@ -1,0 +1,5 @@
+path: C:/Users/VICTUS/Desktop/Research project/J26-IT-307_ai-shoplifting-detection/member2-person-tracking/Dataset/yolo
+train: images/train
+val: images/val
+names:
+  0: person

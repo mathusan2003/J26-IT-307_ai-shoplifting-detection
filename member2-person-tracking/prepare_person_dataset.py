@@ -81,6 +81,7 @@ def main() -> None:
     parser.add_argument("--video-every", type=int, default=20)
     parser.add_argument("--video-limit", type=int, default=40)
     parser.add_argument("--output", type=Path, default=DATASET / "yolo")
+    parser.add_argument("--config", type=Path, default=ROOT / "configs" / "data.yaml")
     args = parser.parse_args()
 
     from ultralytics import YOLO
@@ -100,6 +101,10 @@ def main() -> None:
             shutil.rmtree(frame_dir)
         for video in sorted(video_dir.glob("*.mp4")):
             sources.extend(_extract_video_frames(video, frame_dir, args.video_every, args.video_limit))
+    if not sources:
+        raise FileNotFoundError(
+            f"No images or video frames found under {DATASET / 'images'} and {video_dir}"
+        )
 
     labelled = 0
     boxes = 0
@@ -126,8 +131,8 @@ def main() -> None:
             shutil.copy2(staging / "images" / name, args.output / "images" / split / name)
             shutil.copy2(staging / "labels" / f"{stem}.txt", args.output / "labels" / split / f"{stem}.txt")
 
-    yaml_path = ROOT / "configs" / "person.yaml"
-    yaml_path.write_text(
+    args.config.parent.mkdir(parents=True, exist_ok=True)
+    args.config.write_text(
         "\n".join([
             f"path: {args.output.resolve().as_posix()}",
             "train: images/train",
@@ -139,7 +144,7 @@ def main() -> None:
         encoding="utf-8",
     )
     print(f"images={labelled} boxes={boxes} empty={empty} train={len(splits['train'])} val={len(splits['val'])}")
-    print(f"wrote {yaml_path}")
+    print(f"wrote {args.config}")
 
 
 if __name__ == "__main__":
