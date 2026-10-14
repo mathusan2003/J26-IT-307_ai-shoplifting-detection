@@ -7,12 +7,17 @@ from typing import Any
 
 class PersonDetector:
     """Filter YOLOv8 predictions down to COCO class 0 (person)."""
-    def __init__(self, weights: str | Path = "models/yolov8n.pt", confidence: float = 0.25):
+    def __init__(self, weights: str | Path = "models/yolov8n-person-track.pt", confidence: float = 0.1):
         try:
             from ultralytics import YOLO
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError("Install ultralytics to run direct YOLO detection") from exc
-        self.model = YOLO(str(weights))
+        path = Path(weights)
+        if not path.exists():
+            fallback = Path("models/yolov8n.pt")
+            if fallback.exists() and path != fallback:
+                path = fallback
+        self.model = YOLO(str(path))
         self.confidence = confidence
 
     def detect(self, frame: Any) -> list[dict[str, object]]:

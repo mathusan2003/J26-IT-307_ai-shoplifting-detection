@@ -26,6 +26,9 @@ python -m pip install -r requirements.txt
 python main.py tests/fixtures/sample_detections.json --output outputs/tracking_log.json
 python demo_track.py --detections tests/fixtures/sample_detections.json --video path/to/clip.mp4 --output-video outputs/annotated.mp4 --output-json outputs/tracking_log.json
 python -m unittest discover -s tests -v
+python prepare_person_dataset.py
+python train_detector.py
+python demo_track.py --video Dataset/videos/pi0.mp4 --weights models/yolov8n-person-track.pt
 ```
 
 `main.py` and `demo_track.py` emit only the fields currently approved in `docs/api-contract.md`:

@@ -31,7 +31,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--zones", type=Path, default=DEFAULT_ZONES, help="Polygon zones used only on the overlay")
     parser.add_argument("--no-zones", action="store_true", help="Do not draw zone names")
     parser.add_argument("--frame-id-start", type=int, default=None, help="frame_id of the first video frame")
-    parser.add_argument("--weights", type=Path, default=Path("models/yolov8n.pt"), help="YOLOv8 weights when --detections is omitted")
+    parser.add_argument("--weights", type=Path, default=Path("models/yolov8n-person-track.pt"), help="Fine-tuned YOLOv8 person weights when --detections is omitted")
     return parser.parse_args()
 
 
