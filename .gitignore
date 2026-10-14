@@ -60,6 +60,10 @@ mlruns/
 *.temp
 *.log
 
+# Local Component 2 dataset and YOLO training artefacts
+member2-person-tracking/Dataset/**
+member2-person-tracking/runs/**
+
 # Local datasets. Folder placeholders stay in git.
 data/raw/**
 !data/raw/.gitkeep
