@@ -29,13 +29,53 @@ python -m unittest discover -s tests -v
 python prepare_person_dataset.py
 python train_detector.py
 python demo_track.py --video Dataset/videos/pi0.mp4 --weights models/yolov8n-person-track.pt
+python demo_track.py --video Dataset/videos/pi0.mp4 --weights runs/detect/person_bytetrack/weights/best.pt --ultralytics-track --show
 ```
+
+The training command starts from `models/yolov8s.pt` by default. Download
+`yolov8s.pt` (or pass `--weights models/yolov8n.pt` for a smaller edge model)
+before training. The defaults are 100 epochs, batch size 16, eight workers,
+and patience 20, with mosaic, mixup, camera-tilt, and focal-loss settings
+suited to crowded and partially occluded retail scenes. Override these values
+with the corresponding command-line options when hardware requires it.
+
+Training writes runs to `runs/detect/person_bytetrack/weights/best.pt` and
+copies the best checkpoint to `models/yolov8n-person-track.pt` for the
+tracking demo.
+
+`prepare_person_dataset.py` reads local images from `Dataset/images/` and
+sampled frames from `Dataset/videos/`, then creates the YOLOv8 layout under
+`Dataset/yolo/`:
+
+```text
+Dataset/yolo/
+├── images/
+│   ├── train/
+│   └── val/
+├── labels/
+│   ├── train/
+│   └── val/
+└── (data.yaml is written to configs/data.yaml)
+```
+
+Each generated label file uses one normalized `class_id x_center y_center
+width height` row per person, with class `0` named `person`. The generated
+configuration uses `images/train` and `images/val` relative to the dataset
+root. Dataset contents and generated training outputs remain local and are
+ignored by Git.
 
 `main.py` and `demo_track.py` emit only the fields currently approved in `docs/api-contract.md`:
 `frame_id`, `tracks[].person_id`, `tracks[].bbox`, and `tracks[].center`.
 Zone names can appear on the annotated video. They are not written into the shared handoff JSON.
 
 `demo_track.py` maps video frame 0 to the first `frame_id` in the detection file unless you pass `--frame-id-start`. If `--detections` is omitted, it runs the optional YOLOv8 adapter on the video instead.
+
+For Ultralytics' built-in persistent ByteTrack, use `--ultralytics-track`.
+This passes `conf=0.1`, `iou=0.5`, `classes=[0]`, and
+`tracker=bytetrack.yaml` by default, so low-confidence person detections can
+participate in occlusion recovery. It writes the same contract-compliant
+`person_id`, `bbox`, and `center` fields as the custom tracker. Add `--show`
+for the live OpenCV window; omit it for headless processing.
 
 A contract-shaped detection sample lives at `tests/fixtures/sample_detections.json`.
 

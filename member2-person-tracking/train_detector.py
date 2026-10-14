@@ -1,4 +1,4 @@
-"""Fine-tune YOLOv8-nano on the person dataset used by ByteTrack."""
+"""Fine-tune a pretrained YOLOv8 model on the person dataset used by ByteTrack."""
 from __future__ import annotations
 
 import argparse
@@ -6,8 +6,8 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_DATA = ROOT / "configs" / "person.yaml"
-DEFAULT_WEIGHTS = ROOT / "models" / "yolov8n.pt"
+DEFAULT_DATA = ROOT / "configs" / "data.yaml"
+DEFAULT_WEIGHTS = ROOT / "models" / "yolov8s.pt"
 EXPORT_WEIGHTS = ROOT / "models" / "yolov8n-person-track.pt"
 
 
@@ -15,10 +15,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Train the YOLOv8 person detector for Component 2 tracking.")
     parser.add_argument("--data", type=Path, default=DEFAULT_DATA)
     parser.add_argument("--weights", type=Path, default=DEFAULT_WEIGHTS)
-    parser.add_argument("--epochs", type=int, default=40)
-    parser.add_argument("--batch", type=int, default=8)
+    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--imgsz", type=int, default=640)
     parser.add_argument("--device", default="0")
+    parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument("--patience", type=int, default=20)
     args = parser.parse_args()
     if not args.data.exists():
         raise FileNotFoundError("Run prepare_person_dataset.py before training.")
@@ -35,10 +37,14 @@ def main() -> None:
         project=str(ROOT / "runs" / "detect"),
         name="person_bytetrack",
         exist_ok=True,
-        patience=12,
-        workers=2,
+        patience=args.patience,
+        workers=args.workers,
         pretrained=True,
         single_cls=True,
+        mosaic=1.0,
+        mixup=0.1,
+        degrees=10.0,
+        fl_gamma=1.5,
         plots=True,
     )
     best = Path(results.save_dir) / "weights" / "best.pt"
