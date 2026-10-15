@@ -52,8 +52,9 @@ Training writes runs to `runs/detect/person_bytetrack/weights/best.pt` and
 copies the best checkpoint to `models/yolov8n-person-track.pt` for the
 tracking demo.
 
-`prepare_person_dataset.py` reads local images from `Dataset/images/` and
-sampled frames from `Dataset/videos/`, then creates the YOLOv8 layout under
+`prepare_person_dataset.py` reads local images from `Dataset/images/`,
+images and videos recursively from `Dataset/shoplifting/`, and sampled frames
+from `Dataset/videos/`, then creates the YOLOv8 layout under
 `Dataset/yolo/`:
 
 ```text

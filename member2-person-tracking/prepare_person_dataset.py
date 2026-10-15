@@ -20,7 +20,10 @@ DEFAULT_WEIGHTS = ROOT / "models" / "yolov8n.pt"
 def _list_images(folder: Path) -> list[Path]:
     if not folder.is_dir():
         return []
-    return sorted(path for path in folder.iterdir() if path.suffix.lower() in {".png", ".jpg", ".jpeg"})
+    return sorted(
+        path for path in folder.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".png", ".jpg", ".jpeg"}
+    )
 
 
 def _xyxy_to_yolo(xyxy: list[float], width: int, height: int) -> str:
@@ -94,16 +97,21 @@ def main() -> None:
     (staging / "labels").mkdir(parents=True)
 
     sources = _list_images(DATASET / "images")
+    shoplifting_dir = DATASET / "shoplifting"
+    sources.extend(_list_images(shoplifting_dir))
     video_dir = DATASET / "videos"
-    if video_dir.is_dir():
+    video_dirs = [video_dir, shoplifting_dir]
+    if any(folder.is_dir() for folder in video_dirs):
         frame_dir = args.output / "_video_frames"
         if frame_dir.exists():
             shutil.rmtree(frame_dir)
-        for video in sorted(video_dir.glob("*.mp4")):
-            sources.extend(_extract_video_frames(video, frame_dir, args.video_every, args.video_limit))
+        for folder in video_dirs:
+            for video in sorted(folder.rglob("*")):
+                if video.is_file() and video.suffix.lower() in {".mp4", ".avi", ".mov", ".mkv", ".webm"}:
+                    sources.extend(_extract_video_frames(video, frame_dir, args.video_every, args.video_limit))
     if not sources:
         raise FileNotFoundError(
-            f"No images or video frames found under {DATASET / 'images'} and {video_dir}"
+            f"No images or video frames found under {DATASET / 'images'}, {shoplifting_dir}, or {video_dir}"
         )
 
     labelled = 0
