@@ -28,16 +28,25 @@ python demo_track.py --detections tests/fixtures/sample_detections.json --video 
 python -m unittest discover -s tests -v
 python prepare_person_dataset.py
 python train_detector.py
-python demo_track.py --video Dataset/videos/pi0.mp4 --weights models/yolov8n-person-track.pt
-python demo_track.py --video Dataset/videos/pi0.mp4 --weights runs/detect/person_bytetrack/weights/best.pt --ultralytics-track --show
+python demo_track.py --video Dataset/videos/not_shoplifting1.mp4 --weights models/yolov8n-person-track.pt --ultralytics-track --no-zones --output-video outputs/not_shoplifting1_tracked.mp4 --output-json outputs/not_shoplifting1_tracking.json
+python main.py --video Dataset/videos/not_shoplifting1.mp4 --weights models/yolov8n-person-track.pt --output outputs/not_shoplifting1_tracking.json --output-video outputs/not_shoplifting1_tracked.mp4
 ```
 
-The training command starts from `models/yolov8s.pt` by default. Download
-`yolov8s.pt` (or pass `--weights models/yolov8n.pt` for a smaller edge model)
-before training. The defaults are 100 epochs, batch size 16, eight workers,
-and patience 20, with mosaic, mixup, camera-tilt, and focal-loss settings
-suited to crowded and partially occluded retail scenes. Override these values
-with the corresponding command-line options when hardware requires it.
+The modular application is split into `config.py`, `kalman_filter.py`,
+`ciou_matching.py`, `bytetrack.py`, and `retail_analytics.py`. Its defaults
+are the specified `T_high=0.6`, `T_low=0.1`, `T_new=0.7`, CIoU distance
+threshold `0.3`, and a 90-frame occlusion buffer. `main.py --video` runs
+YOLOv8 class-0 inference, two-stage ByteTrack association, OpenCV dashboard
+overlays, polygon zone analytics, and writes frame telemetry including
+trajectories, zone, dwell, transitions, and occupancy. Use `--show` for the
+live window; omit it for headless servers.
+
+The training command starts from `models/yolov8n.pt` by default. The defaults
+are 100 epochs, batch size 16, eight workers, and patience 20, with mosaic,
+mixup, and camera-tilt settings suited to crowded and partially occluded
+retail scenes. On a CPU-only machine, use a smaller batch and bounded run such
+as `python train_detector.py --epochs 3 --batch 4 --imgsz 640 --device cpu
+--workers 0`; CUDA hardware can use the longer 100-epoch run.
 
 Training writes runs to `runs/detect/person_bytetrack/weights/best.pt` and
 copies the best checkpoint to `models/yolov8n-person-track.pt` for the

@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DATA = ROOT / "configs" / "data.yaml"
-DEFAULT_WEIGHTS = ROOT / "models" / "yolov8s.pt"
+DEFAULT_WEIGHTS = ROOT / "models" / "yolov8n.pt"
 EXPORT_WEIGHTS = ROOT / "models" / "yolov8n-person-track.pt"
 
 
@@ -44,7 +44,6 @@ def main() -> None:
         mosaic=1.0,
         mixup=0.1,
         degrees=10.0,
-        fl_gamma=1.5,
         plots=True,
     )
     best = Path(results.save_dir) / "weights" / "best.pt"
