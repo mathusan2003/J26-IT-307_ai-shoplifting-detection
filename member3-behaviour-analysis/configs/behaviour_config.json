@@ -1,0 +1,66 @@
+{
+  "fps": 25,
+  "loitering": {
+    "radius_px": 40,
+    "min_seconds": 15,
+    "base_score": 20,
+    "per_extra_second": 0.5,
+    "max_score": 40
+  },
+  "repeated_shelf_visit": {
+    "score_per_repeat": 25,
+    "max_score": 40
+  },
+  "abnormal_movement": {
+    "high_speed_px_per_s": 250,
+    "reversal_min_speed_px_per_s": 30,
+    "min_reversals": 4,
+    "min_tortuosity": 3.5,
+    "min_path_px": 80,
+    "speed_score": 10,
+    "reversal_score_per_event": 2,
+    "reversal_score_cap": 10,
+    "tortuosity_score": 10,
+    "max_score": 30
+  },
+  "object_interaction": {
+    "min_handling_speed_px_per_s": 5,
+    "max_handling_speed_px_per_s": 35,
+    "min_handling_seconds": 4,
+    "object_distance_px": 90,
+    "min_object_iou": 0.01,
+    "min_object_confidence": 0.25,
+    "min_overlap_frames": 3,
+    "handling_score_cap": 15,
+    "object_score_per_frame": 3,
+    "object_score_cap": 10,
+    "max_score": 25
+  },
+  "possible_concealment": {
+    "shrink_ratio": 0.72,
+    "min_bbox_samples": 4,
+    "min_overlap_frames": 3,
+    "absence_frames": 3,
+    "shrink_score": 18,
+    "loss_score": 12,
+    "max_score": 30
+  },
+  "model": {
+    "learning_rate": 0.2,
+    "epochs": 800,
+    "l2": 0.001,
+    "threshold": 0.5
+  },
+  "assessment": {
+    "window_seconds": 30,
+    "min_indicators": 2,
+    "context_only": [
+      "loitering",
+      "repeated_shelf_visit",
+      "object_interaction"
+    ],
+    "medium_min_indicators": 2,
+    "high_min_indicators": 3,
+    "assumption_note": "These cutoffs are configurable assumptions. They have not been validated on labelled retail video and are not a measured false-alarm rate."
+  }
+}

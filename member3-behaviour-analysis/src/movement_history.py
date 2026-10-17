@@ -24,9 +24,14 @@ class MovementRecord:
     position: tuple[int | float, int | float]
     zone: str | None
     sequence: int
+    bbox: tuple[float, float, float, float] | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        """Return the JSON shape stored in a movement history."""
+        """Return the JSON shape stored in a movement history.
+
+        The box is kept on the record for behaviour checks. It is not part
+        of the Phase 1 history JSON.
+        """
         return {
             "frame_id": self.frame_id,
             "timestamp": self.timestamp,
@@ -87,6 +92,7 @@ class MovementHistoryStore:
 
     def _append(self, observation: dict[str, Any]) -> None:
         person_id = observation["person_id"]
+        bbox = observation.get("bbox")
         record = MovementRecord(
             person_id=person_id,
             frame_id=observation["frame_id"],
@@ -94,6 +100,7 @@ class MovementHistoryStore:
             position=(observation["position"][0], observation["position"][1]),
             zone=observation["zone"],
             sequence=self._next_sequence,
+            bbox=None if bbox is None else (bbox[0], bbox[1], bbox[2], bbox[3]),
         )
         self._next_sequence += 1
         self._records.setdefault(person_id, []).append(record)

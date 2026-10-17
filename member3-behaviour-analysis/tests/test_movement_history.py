@@ -187,6 +187,29 @@ class MovementHistoryTests(unittest.TestCase):
         self.assertEqual(by_person[12][0]["position"], [450, 320])
         self.assertEqual(by_person[12][-1]["timestamp"], "10:16:10")
 
+    def test_bbox_is_available_to_detectors_but_omitted_from_history_json(self) -> None:
+        store = MovementHistoryStore()
+        store.ingest_frame(
+            {
+                "frame_id": 100,
+                "tracks": [
+                    {
+                        "person_id": 12,
+                        "bbox": [710, 100, 790, 300],
+                        "center": [750, 200],
+                    }
+                ],
+            }
+        )
+
+        exported = store.export_person(12)["movement_history"][0]
+        record = store.records_for(12)[0]
+
+        self.assertNotIn("bbox", exported)
+        self.assertEqual(record.bbox, (710.0, 100.0, 790.0, 300.0))
+        self.assertEqual(exported["position"], [750, 200])
+        self.assertIsNone(exported["zone"])
+
     def test_frames_without_timestamp_or_zone_still_record_position(self) -> None:
         history = build_movement_histories(
             [

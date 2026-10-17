@@ -1,0 +1,208 @@
+{
+  "task": "video_level_normal_vs_shoplifting",
+  "label_source": "parent_folder",
+  "positive_class": "shoplifting",
+  "behaviour_labels_used": false,
+  "features": [
+    "temporal_bin_00",
+    "temporal_bin_01",
+    "temporal_bin_02",
+    "temporal_bin_03",
+    "temporal_bin_04",
+    "temporal_bin_05",
+    "temporal_bin_06",
+    "temporal_bin_07",
+    "temporal_bin_08",
+    "temporal_bin_09",
+    "temporal_bin_10",
+    "temporal_bin_11",
+    "temporal_bin_12",
+    "temporal_bin_13",
+    "temporal_bin_14",
+    "temporal_bin_15",
+    "spatial_00",
+    "spatial_01",
+    "spatial_02",
+    "spatial_03",
+    "spatial_04",
+    "spatial_05",
+    "spatial_06",
+    "spatial_07",
+    "spatial_08",
+    "spatial_09",
+    "spatial_10",
+    "spatial_11",
+    "spatial_12",
+    "spatial_13",
+    "spatial_14",
+    "spatial_15",
+    "motion_mean",
+    "motion_std",
+    "motion_max",
+    "motion_p90",
+    "late_early_ratio",
+    "motion_center_x",
+    "motion_center_y"
+  ],
+  "model": {
+    "type": "l2_logistic_regression",
+    "library": "scikit-learn",
+    "class_weight": "balanced",
+    "C": 10.0,
+    "C_selection": "highest validation F1; ties prefer C closest to 1",
+    "threshold": 0.5
+  },
+  "split_counts": {
+    "train": {
+      "videos": 125,
+      "normal": 61,
+      "shoplifting": 64
+    },
+    "validation": {
+      "videos": 27,
+      "normal": 13,
+      "shoplifting": 14
+    },
+    "test": {
+      "videos": 27,
+      "normal": 13,
+      "shoplifting": 14
+    }
+  },
+  "train": {
+    "accuracy": 0.896,
+    "precision": 0.8923076923076924,
+    "recall": 0.90625,
+    "f1": 0.8992248062015504,
+    "specificity": 0.8852459016393442,
+    "support": 125,
+    "confusion_matrix": {
+      "true_positive": 58,
+      "false_positive": 7,
+      "true_negative": 54,
+      "false_negative": 6
+    }
+  },
+  "validation": {
+    "accuracy": 0.7037037037037037,
+    "precision": 0.7142857142857143,
+    "recall": 0.7142857142857143,
+    "f1": 0.7142857142857143,
+    "specificity": 0.6923076923076923,
+    "support": 27,
+    "confusion_matrix": {
+      "true_positive": 10,
+      "false_positive": 4,
+      "true_negative": 9,
+      "false_negative": 4
+    }
+  },
+  "test": {
+    "accuracy": 0.5555555555555556,
+    "precision": 0.5714285714285714,
+    "recall": 0.5714285714285714,
+    "f1": 0.5714285714285714,
+    "specificity": 0.5384615384615384,
+    "support": 27,
+    "confusion_matrix": {
+      "true_positive": 8,
+      "false_positive": 6,
+      "true_negative": 7,
+      "false_negative": 6
+    }
+  },
+  "majority_baseline_test": {
+    "accuracy": 0.5185185185185185,
+    "precision": 0.5185185185185185,
+    "recall": 1.0,
+    "f1": 0.6829268292682926,
+    "specificity": 0.0,
+    "support": 27,
+    "confusion_matrix": {
+      "true_positive": 14,
+      "false_positive": 13,
+      "true_negative": 0,
+      "false_negative": 0
+    }
+  },
+  "duration_only_test": {
+    "accuracy": 0.6666666666666666,
+    "precision": 0.6666666666666666,
+    "recall": 0.7142857142857143,
+    "f1": 0.689655172413793,
+    "specificity": 0.6153846153846154,
+    "support": 27,
+    "confusion_matrix": {
+      "true_positive": 10,
+      "false_positive": 5,
+      "true_negative": 8,
+      "false_negative": 4
+    },
+    "fields": [
+      "duration_s"
+    ]
+  },
+  "resolution_only_test": {
+    "accuracy": 0.4074074074074074,
+    "precision": 0.4583333333333333,
+    "recall": 0.7857142857142857,
+    "f1": 0.5789473684210527,
+    "specificity": 0.0,
+    "support": 27,
+    "confusion_matrix": {
+      "true_positive": 11,
+      "false_positive": 13,
+      "true_negative": 0,
+      "false_negative": 3
+    },
+    "fields": [
+      "width",
+      "height"
+    ]
+  },
+  "catalog_counts": {
+    "files": 182,
+    "readable": 182,
+    "normal": 90,
+    "shoplifting": 92
+  },
+  "missing_expected_names": {
+    "normal": [],
+    "shoplifting": [
+      "shoplifting-49.mp4"
+    ]
+  },
+  "duplicate_hashes": [
+    {
+      "sha256": "59ad527d54207857bd184b0df651f83ad6ff61ad7fda49bdf5dee00def891d87",
+      "video_ids": [
+        "normal/normal-55.mp4",
+        "normal/normal-56.mp4"
+      ]
+    },
+    {
+      "sha256": "a0f52f11527a9a0bf019ddea52ed675e68ddc07934a518aefa155820685fafa7",
+      "video_ids": [
+        "normal/normal-44.mp4",
+        "normal/normal-52.mp4"
+      ]
+    },
+    {
+      "sha256": "be6f313d9d8aeb87f0a3b61a69cffe0add61e4819509b6b68e8533f5162987ba",
+      "video_ids": [
+        "normal/normal-50.mp4",
+        "normal/normal-51.mp4"
+      ]
+    }
+  ],
+  "hash_label_conflicts": [],
+  "excluded": [],
+  "split_rule": "within each label, sort unique hashes; the first block is train, the next 15% is validation, and the last 15% is test",
+  "limitations": [
+    "Folder names are the only labels. Loitering, repeated shelf visits, abnormal movement, object interaction, and concealment are not annotated in these clips.",
+    "RetailS and PoseLift were not found on this machine, so they were not used.",
+    "The motion model is a baseline. On the locked test split its F1 is below the majority-class F1 and below a duration-only model, so clip length is a confound and motion alone is weak.",
+    "Three normal clips are byte-for-byte duplicates of other normal clips. Each duplicate pair is kept in one split and counted once.",
+    "shoplifting-49.mp4 is missing. No replacement label was created."
+  ]
+}
