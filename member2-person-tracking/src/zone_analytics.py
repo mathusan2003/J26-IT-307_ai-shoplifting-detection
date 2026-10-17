@@ -32,7 +32,22 @@ class ZoneAnalytics:
     def __init__(self, zones_path: str | Path):
         raw = json.loads(Path(zones_path).read_text(encoding="utf-8"))
         self.zones: dict[str, list[list[float]]] = raw["zones"] if isinstance(raw, dict) else raw
+        self.start_zone = raw.get("start_zone") if isinstance(raw, dict) else None
+        self.end_zone = raw.get("end_zone") if isinstance(raw, dict) else None
+        self.reference_size = tuple(raw["reference_size"]) if isinstance(raw, dict) and raw.get("reference_size") else None
         self.people: dict[int, PersonZoneState] = {}
+
+    def configure_frame_size(self, width: int, height: int) -> None:
+        if not self.reference_size:
+            return
+        reference_width, reference_height = self.reference_size
+        if reference_width <= 0 or reference_height <= 0:
+            raise ValueError("Zone reference_size must contain positive width and height")
+        scale_x, scale_y = width / reference_width, height / reference_height
+        self.zones = {
+            name: [[point[0] * scale_x, point[1] * scale_y] for point in polygon]
+            for name, polygon in self.zones.items()
+        }
 
     def zone_for_bbox(self, bbox: BBox) -> str | None:
         point = bottom_center(bbox)
@@ -53,3 +68,7 @@ class ZoneAnalytics:
     def dwell_time(self, person_id: int, timestamp_seconds: float) -> float:
         state = self.people[person_id]
         return 0.0 if state.entered_at is None else max(0.0, timestamp_seconds - state.entered_at)
+
+    def reached_end_zone(self, person_id: int) -> bool:
+        state = self.people[person_id]
+        return self.end_zone is not None and self.end_zone in state.zone_history
