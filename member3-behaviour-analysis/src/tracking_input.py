@@ -24,7 +24,9 @@ def load_tracking_sequence(path: str | Path) -> list[dict[str, Any]]:
     """
     file_path = Path(path)
     try:
-        with file_path.open(encoding="utf-8") as handle:
+        # utf-8-sig accepts the BOM that Windows editors add. Member 2 reads
+        # JSON the same way. Plain UTF-8 files still load.
+        with file_path.open(encoding="utf-8-sig") as handle:
             payload = json.load(handle)
     except FileNotFoundError:
         raise
@@ -53,7 +55,9 @@ def observations_from_frame(frame: dict[str, Any]) -> list[dict[str, Any]]:
     """Turn one tracking frame into movement observations.
 
     Each observation is a plain dict with person_id, frame_id, timestamp,
-    position, and zone. One track entry produces one observation. An empty
+    position, zone, and bbox. ``bbox`` is kept when the track has one, so
+    later behaviour checks can use box size without changing the movement
+    history JSON. One track entry produces one observation. An empty
     ``tracks`` list produces no observations.
     """
     if not isinstance(frame, dict):
@@ -78,6 +82,7 @@ def observations_from_frame(frame: dict[str, Any]) -> list[dict[str, Any]]:
                 "timestamp": track_timestamp if track_timestamp is not None else frame_timestamp,
                 "position": _read_position(track, frame_id, person_id),
                 "zone": _read_zone(track, frame_id, person_id),
+                "bbox": _read_bbox(track, frame_id, person_id),
             }
         )
     return observations
@@ -128,6 +133,25 @@ def _read_zone(track: dict[str, Any], frame_id: int, person_id: int) -> str | No
     if _present(track, "shelf"):
         return _zone_name(track["shelf"], f"{label} shelf")
     return None
+
+
+def _read_bbox(
+    track: dict[str, Any], frame_id: int, person_id: int
+) -> list[float] | None:
+    """Return a validated box, or None when the track does not include one."""
+    if not _present(track, "bbox"):
+        return None
+    label = f"frame {frame_id} person {person_id}"
+    value = track["bbox"]
+    if not isinstance(value, (list, tuple)) or len(value) != 4:
+        raise ValueError(f"{label} bbox must be [x_min, y_min, x_max, y_max]")
+    x_min = float(_coordinate(value[0], f"{label} bbox"))
+    y_min = float(_coordinate(value[1], f"{label} bbox"))
+    x_max = float(_coordinate(value[2], f"{label} bbox"))
+    y_max = float(_coordinate(value[3], f"{label} bbox"))
+    if x_max < x_min or y_max < y_min:
+        raise ValueError(f"{label} bbox maximums must be greater than or equal to minimums")
+    return [x_min, y_min, x_max, y_max]
 
 
 def _present(track: dict[str, Any], field: str) -> bool:

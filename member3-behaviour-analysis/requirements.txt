@@ -1,0 +1,6 @@
+# Member 3 video baseline.
+# Read the Normal / Shoplifting clips. Pin NumPy below 2 so this OpenCV
+# build does not break scikit-learn 1.4.
+opencv-python-headless==4.10.0.84
+numpy>=1.26.3,<2
+scikit-learn>=1.4.0,<1.5
