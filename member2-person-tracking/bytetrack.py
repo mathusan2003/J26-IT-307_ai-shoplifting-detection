@@ -37,7 +37,6 @@ class Track:
 
     def update(self, detection: Detection) -> None:
         self.bbox = self.filter.update(detection.bbox)
-        self.bbox = detection.bbox
         self.confidence = detection.confidence
         self.missed = 0
         self.trajectory.append(self.center)

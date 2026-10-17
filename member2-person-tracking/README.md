@@ -32,6 +32,47 @@ python demo_track.py --video Dataset/videos/not_shoplifting1.mp4 --weights model
 python main.py --video Dataset/videos/not_shoplifting1.mp4 --weights models/yolov8n-person-track.pt --output outputs/not_shoplifting1_tracking.json --output-video outputs/not_shoplifting1_tracked.mp4
 ```
 
+## Dataset cleaning and pretrained baseline
+
+Keep source footage in `data/raw_videos/`; the cleaning pipeline never deletes
+or modifies those files. It recursively validates supported videos, checks
+SHA-256 duplicates, and copies results to `data/cleaned_videos/` or
+`data/rejected_videos/`:
+
+```powershell
+python src\clean_dataset.py
+```
+
+The default run decodes every frame and writes
+`outputs/metrics/dataset_cleaning_report.csv`. Use
+`--sample-only` only for a quick preliminary inventory; it does not provide
+the same validation guarantee.
+
+Run the pretrained YOLOv8 person detector with Ultralytics ByteTrack over all
+cleaned videos:
+
+```powershell
+python src\run_tracking_dataset.py
+```
+
+This writes an annotated video, contract-shaped frame JSON, and frame-level
+CSV for each input video under `outputs/videos/`, `outputs/json/`, and
+`outputs/metrics/`. The default weights are `models/yolov8n.pt`; use
+`--weights` to compare a fine-tuned checkpoint later. The generated
+`person_id` values are tracker IDs, not real-world identities.
+
+The default [zones.json](configs/zones.json) marks `Entrance` as
+`start_zone` and `Checkout` as `end_zone`. The batch tracker draws all
+configured polygons and adds `zone`, `start_zone`, `end_zone`, and
+`reached_end_zone` fields to each track. Edit the polygon coordinates to match
+each camera before running; the current coordinates assume a 1280x720 view.
+
+ByteTrack is not a trainable detector model. Its behavior is controlled by
+association thresholds and track-buffer settings in
+[tracker_config.yaml](configs/tracker_config.yaml). Tune those settings and
+evaluate on ground-truth annotations rather than attempting to train
+ByteTrack from scratch.
+
 The modular application is split into `config.py`, `kalman_filter.py`,
 `ciou_matching.py`, `bytetrack.py`, and `retail_analytics.py`. Its defaults
 are the specified `T_high=0.6`, `T_low=0.1`, `T_new=0.7`, CIoU distance

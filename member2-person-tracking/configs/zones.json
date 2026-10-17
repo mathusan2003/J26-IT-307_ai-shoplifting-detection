@@ -1,4 +1,7 @@
 {
+  "start_zone": "Entrance",
+  "end_zone": "Checkout",
+  "reference_size": [1280, 720],
   "zones": {
     "Entrance": [[0, 0], [220, 0], [220, 720], [0, 720]],
     "Aisle 1": [[220, 0], [640, 0], [640, 720], [220, 720]],
