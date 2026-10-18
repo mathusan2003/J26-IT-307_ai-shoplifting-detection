@@ -84,3 +84,7 @@ results/videos/**
 !results/videos/.gitkeep
 results/reports/**
 !results/reports/.gitkeep
+
+# Component 4 local dataset and generated model
+/member4-risk-prediction/Crime_Data_from_2020_to_Present.csv
+/member4-risk-prediction/models/*.joblib

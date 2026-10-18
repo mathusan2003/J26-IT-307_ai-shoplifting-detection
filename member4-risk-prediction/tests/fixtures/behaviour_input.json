@@ -1,0 +1,14 @@
+{
+    "person_id": 12,
+    "behaviours": [
+        {
+            "type": "loitering",
+            "score": 20
+        },
+        {
+            "type": "repeated_shelf_visit",
+            "score": 25
+        }
+    ],
+    "behaviour_score": 45
+}
