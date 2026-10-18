@@ -1,14 +1,3 @@
-# Python dependencies for the AI-Based Real-Time Shoplifting Detection System.
-#
-# No packages are required at this stage. Implementation has not started.
-# Add a dependency here only when a module begins implementation, using a
-# version the team has agreed on.
-#
-# Group new entries under the module that needs them:
-#
-# --- shared ---
 # --- member1-object-detection ---
-# --- member2-person-tracking ---
-# --- member3-behaviour-analysis ---
-# --- member4-risk-prediction ---
-# --- integration ---
+ultralytics==8.4.178
+opencv-python==5.0.0.93
