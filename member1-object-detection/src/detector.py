@@ -57,6 +57,49 @@ class ObjectDetector:
 
         return self.detect_frame(frame, frame_id)
 
+    
+    def detect_video(self, video_path, output_path, frame_step=1):
+        video_path = Path(video_path)
+
+        if not video_path.is_file():
+            raise FileNotFoundError(
+                f"Video not found: {video_path}"
+            )
+
+        if frame_step < 1:
+            raise ValueError("frame_step must be at least 1.")
+
+        capture = cv2.VideoCapture(str(video_path))
+
+        if not capture.isOpened():
+            raise ValueError(f"Could not open video: {video_path}")
+
+        results = []
+
+        try:
+            frame_id = 0
+
+            while True:
+                success, frame = capture.read()
+
+                if not success:
+                    break
+
+                if frame_id % frame_step == 0:
+                    results.append(
+                        self.detect_frame(frame, frame_id)
+                    )
+
+                frame_id += 1
+        finally:
+            capture.release()
+
+        save_json(results, output_path)
+
+        print(f"Frames processed: {len(results)}")
+        print(f"JSON saved to: {output_path}")
+
+        return results
 
 def save_json(result, output_path):
     output_path = Path(output_path)
