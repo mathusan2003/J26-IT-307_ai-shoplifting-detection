@@ -72,6 +72,7 @@ data/processed/**
 !data/processed/.gitkeep
 data/samples/**
 !data/samples/.gitkeep
+data/sample
 
 # Generated module outputs. Folder placeholders stay in git.
 **/outputs/**
