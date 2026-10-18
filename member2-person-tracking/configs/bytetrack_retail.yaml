@@ -1,0 +1,10 @@
+# Retail-tuned ByteTrack configuration for Component 2 (Member 2)
+# Optimized for surveillance occlusions, shelf interaction recovery, and crowded aisles.
+
+tracker_type: bytetrack      # Tracker algorithm
+track_high_thresh: 0.50      # Detection threshold for first-pass association
+track_low_thresh: 0.10       # Low-confidence threshold for occlusion recovery pass
+new_track_thresh: 0.60       # Threshold to initialize a new person identity
+track_buffer: 90             # 90 frames (~3 sec at 30fps) retention for shelf/bending occlusion
+match_thresh: 0.70           # Cost matrix distance threshold for Hungarian association
+fuse_score: True             # Fuse detection confidence into association metric
