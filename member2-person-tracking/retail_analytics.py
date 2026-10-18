@@ -64,7 +64,10 @@ class TelemetryWriter:
 
     def append(self, frame_id: int, timestamp: float, tracks: Sequence[Mapping[str, object]],
                analytics: dict[str, object]) -> None:
-        self.frames.append({"frame_id": frame_id, "timestamp": timestamp,
+        mins, secs = divmod(timestamp, 60)
+        hours, mins = divmod(mins, 60)
+        time_str = f"{int(hours):02d}:{int(mins):02d}:{secs:06.3f}"
+        self.frames.append({"frame_id": frame_id, "timestamp": time_str,
                             "tracks": list(tracks), "analytics": analytics})
 
     def write(self) -> None:

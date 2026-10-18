@@ -63,6 +63,8 @@ mlruns/
 # Local Component 2 dataset and YOLO training artefacts
 member2-person-tracking/Dataset/**
 member2-person-tracking/runs/**
+member2-person-tracking/training_dataset/**
+/runs/**
 *.zip
 
 # Local datasets. Folder placeholders stay in git.
