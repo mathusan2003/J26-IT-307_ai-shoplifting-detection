@@ -25,9 +25,19 @@ def process_video(
     from config import TrackingConfig
     from retail_analytics import RetailAnalytics, TelemetryWriter
 
+    module_root = Path(__file__).resolve().parent
+    if zones_path is None or not Path(zones_path).exists():
+        fallback_zones = module_root / "configs" / "zones.json"
+        if fallback_zones.exists():
+            zones_path = fallback_zones
+
+    weights_path = Path(weights)
+    if not weights_path.exists() and (module_root / weights_path).exists():
+        weights_path = module_root / weights_path
+
     config = TrackingConfig.from_zone_file(
-        zones_path or Path("configs/zones.json"),
-        model_weights=weights,
+        zones_path,
+        model_weights=weights_path,
         output_json=output,
         output_video=output_video or Path("outputs/tracked.mp4"),
         display=show,

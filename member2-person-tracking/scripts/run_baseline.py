@@ -34,7 +34,10 @@ def main():
     # Resolve video path
     video_path = Path(args.video)
     if not video_path.is_absolute():
-        video_path = ROOT / video_path
+        if video_path.exists():
+            video_path = video_path.resolve()
+        elif (ROOT / video_path).exists():
+            video_path = ROOT / video_path
 
     if not video_path.exists():
         # Check in data/remaining_videos, data/representative_videos, or Dataset/videos
@@ -61,7 +64,10 @@ def main():
     # Resolve weights
     weights_path = Path(args.weights)
     if not weights_path.is_absolute():
-        weights_path = ROOT / weights_path
+        if weights_path.exists():
+            weights_path = weights_path.resolve()
+        elif (ROOT / weights_path).exists():
+            weights_path = ROOT / weights_path
     if not weights_path.exists():
         fallback_weights = ROOT / "models" / "yolov8n.pt"
         if fallback_weights.exists():
