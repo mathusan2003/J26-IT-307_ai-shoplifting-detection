@@ -12,6 +12,7 @@ from src.pipeline import (
     read_json,
     track_detection_sequence,
 )
+from src.tracking_outcomes import TrackingOutcomes
 from src.visualize import annotate_frames, iter_video_frames
 from src.zone_analytics import ZoneAnalytics
 
@@ -27,6 +28,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--video", type=Path, required=True, help="Input video whose frames match detection frame_id values")
     parser.add_argument("--output-video", type=Path, default=Path("outputs/annotated.mp4"))
     parser.add_argument("--output-json", type=Path, default=Path("outputs/tracking_log.json"))
+    parser.add_argument("--outcomes", type=Path, default=Path("outputs/tracking_outcomes.json"),
+                        help="Full multi-person outcomes JSON (IDs, trajectories, zones, occupancy, status)")
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--zones", type=Path, default=DEFAULT_ZONES, help="Polygon zones used only on the overlay")
     parser.add_argument("--no-zones", action="store_true", help="Do not draw zone names")
@@ -37,7 +40,7 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Use Ultralytics' persistent ByteTrack implementation instead of the custom tracker",
     )
-    parser.add_argument("--conf", type=float, default=0.1, help="Detector confidence threshold for tracking")
+    parser.add_argument("--conf", type=float, default=0.2, help="Detector confidence threshold for crowded tracking")
     parser.add_argument("--iou", type=float, default=0.5, help="NMS IoU threshold for tracking")
     parser.add_argument("--tracker", default="bytetrack.yaml", help="Ultralytics tracker configuration")
     parser.add_argument("--show", action="store_true", help="Display the tracking window while processing")
@@ -55,7 +58,8 @@ def _tracks_from_detector(video: Path, frame_id_start: int, tracker, weights: Pa
     capture = cv2.VideoCapture(str(video))
     if not capture.isOpened():
         raise FileNotFoundError(f"Could not open video: {video}")
-    results: list[dict] = []
+    contract: list[dict] = []
+    detailed: list[dict] = []
     index = 0
     try:
         while True:
@@ -64,14 +68,13 @@ def _tracks_from_detector(video: Path, frame_id_start: int, tracker, weights: Pa
                 break
             frame_id = frame_id_start + index
             detections = detector.detect(image)
-            results.append({
-                "frame_id": frame_id,
-                "tracks": [track.to_contract() for track in tracker.update(detections)],
-            })
+            active = tracker.update(detections)
+            contract.append({"frame_id": frame_id, "tracks": [track.to_contract() for track in active]})
+            detailed.append({"frame_id": frame_id, "tracks": tracker.status_records()})
             index += 1
     finally:
         capture.release()
-    return results
+    return contract, detailed
 
 
 def _tracks_from_ultralytics(
@@ -142,7 +145,13 @@ def main() -> None:
     args = _parse_args()
     settings = load_tracker_settings(args.config)
     tracker = make_tracker(settings)
-    fps = settings.get("fps", 30.0)
+    import cv2
+    probe = cv2.VideoCapture(str(args.video))
+    fps = probe.get(cv2.CAP_PROP_FPS) or settings.get("fps", 30.0)
+    width = int(probe.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
+    height = int(probe.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
+    probe.release()
+    detailed: list[dict] | None = None
     if args.detections is None and args.frame_id_start is None:
         frame_id_start = 0
     elif args.detections is not None:
@@ -165,21 +174,30 @@ def main() -> None:
             args.show,
         )
     elif args.detections is None:
-        sequence = _tracks_from_detector(args.video, frame_id_start, tracker, args.weights)
+        sequence, detailed = _tracks_from_detector(args.video, frame_id_start, tracker, args.weights)
 
-    tracks_by_frame = {int(frame["frame_id"]): frame["tracks"] for frame in sequence}
     analytics = None if args.no_zones or not args.zones.exists() else ZoneAnalytics(args.zones)
+    if analytics is not None and width and height:
+        analytics.configure_frame_size(width, height)
+    outcomes = TrackingOutcomes(fps, int(settings.get("max_missed_frames", 30)), analytics)
+    source = detailed if detailed is not None else sequence
+    overlay_by_frame: dict[int, list[dict]] = {}
+    for frame in source:
+        record = outcomes.observe(int(frame["frame_id"]), frame.get("tracks", []))
+        overlay_by_frame[int(frame["frame_id"])] = record["people"]
     written = annotate_frames(
         iter_video_frames(args.video, frame_id_start),
-        tracks_by_frame,
+        overlay_by_frame,
         args.output_video,
         fps,
         analytics,
     )
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_json.write_text(json.dumps(sequence, indent=2), encoding="utf-8")
+    payload = outcomes.write(args.outcomes)
     print(f"wrote {written} annotated frames to {args.output_video}")
     print(f"wrote {len(sequence)} tracking frames to {args.output_json}")
+    print(f"wrote outcomes for {len(payload['unique_person_ids'])} people to {args.outcomes}")
 
 
 if __name__ == "__main__":

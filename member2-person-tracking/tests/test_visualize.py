@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from src.pipeline import read_json, track_detection_sequence
-from src.visualize import annotate_frames, colour_for_id, draw_tracks, require_opencv
+from src.visualize import annotate_frames, colour_for_id, draw_tracks, draw_zones, require_opencv
 from src.zone_analytics import ZoneAnalytics
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,10 +24,31 @@ class VisualizeTests(unittest.TestCase):
         self.assertEqual(colour_for_id(3), colour_for_id(3))
         self.assertNotEqual(colour_for_id(1), colour_for_id(2))
 
+    def test_draw_zones_marks_entry_and_exit(self):
+        frame = self.np.zeros((720, 1280, 3), dtype=self.np.uint8)
+        painted = draw_zones(frame, ZoneAnalytics(ROOT / "configs" / "zones.json"))
+        self.assertGreater(int(painted.sum()), 0)
+
+    def test_draw_zones_skips_shelf_labels(self):
+        from src.visualize import zone_caption
+
+        self.assertIsNone(zone_caption(None, "Shelf B"))
+        self.assertIsNone(zone_caption(None, "Shelf A"))
+
     def test_draw_tracks_paints_box_and_id(self):
         frame = self.np.zeros((80, 80, 3), dtype=self.np.uint8)
         draw_tracks(frame, [{"person_id": 4, "bbox": [10, 10, 40, 50], "center": [25, 30]}])
         self.assertGreater(int(frame.sum()), 0)
+
+    def test_draw_tracks_skips_lost_kalman_boxes(self):
+        frame = self.np.zeros((80, 80, 3), dtype=self.np.uint8)
+        draw_tracks(frame, [{
+            "person_id": 9,
+            "bbox": [10, 10, 40, 50],
+            "center": [25, 30],
+            "status": "temporarily_lost",
+        }])
+        self.assertEqual(int(frame.sum()), 0)
 
     def test_annotate_video_from_fixture(self):
         sequence = track_detection_sequence(read_json(FIXTURE))

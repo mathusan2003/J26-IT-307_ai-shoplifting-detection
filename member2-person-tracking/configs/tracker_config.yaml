@@ -1,6 +1,13 @@
-# ByteTrack-style association settings. Frame rate is used for timestamps.
-high_confidence_threshold: 0.50
+# Crowded retail ByteTrack (Component 2).
+# match_thresh is the CIoU gate used by src/tracker.py (not Ultralytics' 0.8 score).
+track_thresh: 0.20
+high_confidence_threshold: 0.20
 low_confidence_threshold: 0.10
-match_iou_threshold: 0.30
-max_missed_frames: 30
+new_track_threshold: 0.20
+match_thresh: 0.20
+match_iou_threshold: 0.20
+track_buffer: 60
+max_missed_frames: 60
+reentry_buffer: 90
+reentry_frames: 90
 fps: 30

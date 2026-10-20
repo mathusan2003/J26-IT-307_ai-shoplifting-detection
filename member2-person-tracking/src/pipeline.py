@@ -29,10 +29,12 @@ def load_tracker_settings(path: Path = DEFAULT_CONFIG) -> dict[str, float]:
 def make_tracker(settings: dict[str, float] | None = None) -> ByteTracker:
     values = settings or {}
     return ByteTracker(
-        high_threshold=values.get("high_confidence_threshold", 0.5),
+        high_threshold=values.get("high_confidence_threshold", values.get("track_thresh", 0.2)),
         low_threshold=values.get("low_confidence_threshold", 0.1),
-        match_iou_threshold=values.get("match_iou_threshold", 0.3),
-        max_missed_frames=int(values.get("max_missed_frames", 30)),
+        match_iou_threshold=values.get("match_iou_threshold", values.get("match_thresh", 0.2)),
+        max_missed_frames=int(values.get("max_missed_frames", values.get("track_buffer", 60))),
+        reentry_frames=int(values.get("reentry_buffer", values.get("reentry_frames", 90))),
+        new_track_threshold=values.get("new_track_threshold", values.get("track_thresh", 0.2)),
     )
 
 

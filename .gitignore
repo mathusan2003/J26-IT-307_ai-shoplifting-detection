@@ -16,6 +16,7 @@ htmlcov/
 .eggs/
 dist/
 build/
+node_modules/
 
 # Secrets — .env.example is the committed template
 .env
