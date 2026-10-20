@@ -32,6 +32,7 @@ class ZoneAnalytics:
     def __init__(self, zones_path: str | Path):
         raw = json.loads(Path(zones_path).read_text(encoding="utf-8"))
         self.zones: dict[str, list[list[float]]] = raw["zones"] if isinstance(raw, dict) else raw
+        self._base_zones = {name: [list(point) for point in polygon] for name, polygon in self.zones.items()}
         self.start_zone = raw.get("start_zone") if isinstance(raw, dict) else None
         self.end_zone = raw.get("end_zone") if isinstance(raw, dict) else None
         self.reference_size = tuple(raw["reference_size"]) if isinstance(raw, dict) and raw.get("reference_size") else None
@@ -46,7 +47,7 @@ class ZoneAnalytics:
         scale_x, scale_y = width / reference_width, height / reference_height
         self.zones = {
             name: [[point[0] * scale_x, point[1] * scale_y] for point in polygon]
-            for name, polygon in self.zones.items()
+            for name, polygon in self._base_zones.items()
         }
 
     def zone_for_bbox(self, bbox: BBox) -> str | None:

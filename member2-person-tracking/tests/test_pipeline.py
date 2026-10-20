@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.pipeline import load_tracker_settings, read_json, track_detection_sequence
+from src.pipeline import load_tracker_settings, make_tracker, read_json, track_detection_sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "tests" / "fixtures" / "sample_detections.json"
@@ -32,8 +32,17 @@ class PipelineTests(unittest.TestCase):
 
     def test_config_loads_numeric_thresholds(self):
         settings = load_tracker_settings(ROOT / "configs" / "tracker_config.yaml")
-        self.assertEqual(settings["high_confidence_threshold"], 0.5)
+        self.assertEqual(settings["track_thresh"], 0.2)
+        self.assertEqual(settings["high_confidence_threshold"], 0.2)
+        self.assertEqual(settings["match_thresh"], 0.2)
+        self.assertEqual(settings["track_buffer"], 60.0)
+        self.assertEqual(settings["reentry_buffer"], 90.0)
         self.assertEqual(settings["fps"], 30.0)
+        tracker = make_tracker(settings)
+        self.assertEqual(tracker.high_threshold, 0.2)
+        self.assertEqual(tracker.match_iou_threshold, 0.2)
+        self.assertEqual(tracker.max_missed_frames, 60)
+        self.assertEqual(tracker.reentry_frames, 90)
 
 
 if __name__ == "__main__":

@@ -121,6 +121,8 @@ Zone names can appear on the annotated video. They are not written into the shar
 
 `demo_track.py` maps video frame 0 to the first `frame_id` in the detection file unless you pass `--frame-id-start`. If `--detections` is omitted, it runs the optional YOLOv8 adapter on the video instead.
 
+It also writes `outputs/tracking_outcomes.json` with every listed Component 2 outcome: persistent IDs, trajectories, per-frame coordinates, zone transitions, shelf visits, entry/exit, occupancy, timestamps, dwell, and track status (`active`, `temporarily_lost`, `terminated`). That file is for this module. The Member 3 handoff JSON stays contract-only.
+
 For Ultralytics' built-in persistent ByteTrack, use `--ultralytics-track`.
 This passes `conf=0.1`, `iou=0.5`, `classes=[0]`, and
 `tracker=bytetrack.yaml` by default, so low-confidence person detections can
@@ -156,3 +158,49 @@ Use annotated clips with ground truth to report ID switches (IDSW), MOTA, and
 IDF1. Measure FPS around the complete detector-to-tracker loop after a warmup,
 and report hardware, input resolution, detector weights, and thresholds. The
 target is at least 25 FPS.
+
+### Cam multi-person fine-tune
+
+`prepare_cam_multiperson.py` copies `Dataset/cam multi-person` into
+`Dataset/yolo_cam_multiperson/` (80/20, `seed=42`) and writes
+`dataset.yaml` with class `0: person`. The prepared split is 14,389 images:
+11,511 train and 2,878 val. None of the source images had a `.txt` box file,
+so all 14,389 label files are empty. Add class-0 boxes beside the source
+images and rerun the script before training. Zip and train from
+`train_cam_multiperson_colab.ipynb`, then save the download as
+`models/yolov8n-cam-multiperson.pt`.
+
+```powershell
+python prepare_cam_multiperson.py
+tar -a -cf yolo_cam_multiperson.zip -C Dataset yolo_cam_multiperson
+```
+
+`src/detector.py` loads that checkpoint first, then
+`models/yolov8n-person-track.pt`, then `models/yolov8n.pt`. Inference still
+passes `classes=[0]`.
+
+### Benchmark
+
+`models/yolov8n-cam-multiperson.pt` is not in the folder yet, so this table
+does not contain MOTA, IDF1, IDSW, or occlusion recovery for that checkpoint.
+`evaluate.py` needs a labelled tracking JSON in the contract shape, and no
+ground-truth file is in the repository. The speed row is `measure_fps` on the
+fallback checkpoint the priority list selected, after 10 warm-up frames.
+
+| Checkpoint | Hardware | Input | FPS | MOTA | IDF1 | IDSW | Occlusion recovery |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `models/yolov8n-cam-multiperson.pt` | Not trained yet | — | — | — | — | — | — |
+| `models/yolov8n-person-track.pt` | Intel Core i5-13420H, CPU | 544×544, `Dataset/videos/not_shoplifting1.mp4`, 135 timed frames | 38.38 | — | — | — | — |
+
+Detector confidence `0.1`, person class only. Tracker settings from
+`configs/tracker_config.yaml`: high `0.50`, low `0.10`, match IoU `0.30`,
+max missed frames `30`. The 25 FPS target was met on this clip with the
+fallback checkpoint. A contract check of the 145-frame tracking JSON from
+that clip found only integer `frame_id`, `person_id`, `bbox`, and `center`
+(person ids 1–4). Fill the first row after the Colab checkpoint and a
+labelled ground-truth sequence are both available:
+
+```powershell
+python demo_track.py --video Dataset/videos/not_shoplifting1.mp4 --weights models/yolov8n-cam-multiperson.pt --no-zones --output-video outputs/cam_multiperson_sanity.mp4 --output-json outputs/cam_multiperson_sanity.json
+python evaluate.py outputs/cam_multiperson_sanity.json path/to/ground_truth.json
+```
