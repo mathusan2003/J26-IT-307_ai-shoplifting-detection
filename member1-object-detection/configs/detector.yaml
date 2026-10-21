@@ -1,0 +1,10 @@
+# Member 1 pretrained YOLO prototype.
+# Default weights are COCO yolov8n.pt (80 classes). This is not a retail
+# product catalogue, concealment detector, or shoplifting classifier.
+confidence: 0.35
+imgsz: 640
+nms_iou: 0.50
+max_det: 50
+device: auto
+# Empty list = every class the loaded model supports.
+classes: []

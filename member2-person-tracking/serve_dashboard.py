@@ -17,13 +17,15 @@ class ControlIn(BaseModel):
     person_id: Optional[int] = Field(default=None)
 
 
-def create_app():
+def create_app(session=None):
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import FileResponse, Response, StreamingResponse
     from fastapi.staticfiles import StaticFiles
 
+    from src.behaviour_bridge import empty_behaviour_state
     from src.live_session import get_session
+    from src.object_bridge import empty_object_state
 
     app = FastAPI(title="Member 2 Tracking Dashboard")
     app.add_middleware(
@@ -32,19 +34,29 @@ def create_app():
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    session = get_session()
+    live = session if session is not None else get_session()
 
     @app.get("/api/sources")
     def sources():
-        return {"weights": str(session.weights), "videos": session.list_sources()}
+        return {"weights": str(live.weights), "videos": live.list_sources()}
 
     @app.get("/api/state")
     def state():
-        return session.snapshot()
+        return live.snapshot()
+
+    @app.get("/api/behaviour")
+    def behaviour():
+        payload = live.snapshot()
+        return payload.get("behaviour") or empty_behaviour_state()
+
+    @app.get("/api/objects")
+    def objects():
+        payload = live.snapshot()
+        return payload.get("objects") or empty_object_state()
 
     @app.post("/api/control")
     def control(payload: ControlIn):
-        return session.control(payload.action, payload.source, payload.person_id)
+        return live.control(payload.action, payload.source, payload.person_id)
 
     @app.get("/stream.mjpg")
     def stream():
@@ -54,7 +66,37 @@ def create_app():
             import time
 
             while True:
-                jpeg = session.mjpeg_bytes()
+                jpeg = live.mjpeg_bytes()
+                if jpeg:
+                    yield boundary + b"\r\nContent-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n"
+                time.sleep(0.04)
+
+        return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+    @app.get("/stream_behaviour.mjpg")
+    def stream_behaviour():
+        boundary = b"--frame"
+
+        def generate():
+            import time
+
+            while True:
+                jpeg = live.mjpeg_behaviour_bytes()
+                if jpeg:
+                    yield boundary + b"\r\nContent-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n"
+                time.sleep(0.04)
+
+        return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+    @app.get("/stream_objects.mjpg")
+    def stream_objects():
+        boundary = b"--frame"
+
+        def generate():
+            import time
+
+            while True:
+                jpeg = live.mjpeg_objects_bytes()
                 if jpeg:
                     yield boundary + b"\r\nContent-Type: image/jpeg\r\n\r\n" + jpeg + b"\r\n"
                 time.sleep(0.04)
@@ -71,7 +113,7 @@ def create_app():
                 return FileResponse(candidate)
             index = DIST / "index.html"
             if index.is_file():
-                return FileResponse(index)
+                return FileResponse(index, headers={"Cache-Control": "no-store"})
             return Response("Dashboard build missing. Run npm run build in dashboard/", status_code=404)
 
     return app

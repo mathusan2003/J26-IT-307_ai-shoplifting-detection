@@ -1,0 +1,8 @@
+# Component 1 local dependencies. Install from this folder:
+# python -m pip install -r requirements.txt
+#
+# Same stack Member 2 already uses. Do not download YOLO weights here.
+opencv-python-headless>=4.8,<5
+ultralytics>=8.2,<9
+torch>=2.2
+torchvision>=0.17

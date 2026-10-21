@@ -18,6 +18,7 @@ REPO_ROOT = MODULE_ROOT.parent
 sys.path.insert(0, str(MODULE_ROOT / "src"))
 
 from behaviour import analyse_tracking_frames, validate_behaviour_result
+from live_behaviour_view import LiveBehaviourSession, format_overlay_lines
 from member2_adapter import (
     analyse_member2_frames,
     apply_source_fps,
@@ -333,6 +334,144 @@ class LiveWebcamPathTests(unittest.TestCase):
         self.assertEqual(len(frames), 3)
         self.assertEqual(frames[2]["timestamp"], "0.067")
         self.assertEqual(frames[2]["tracks"][0]["person_id"], 1)
+
+
+class LiveMember2ToMember3SessionTests(unittest.TestCase):
+    def test_single_frame_does_not_invent_loitering_or_normal_movement(self) -> None:
+        session = LiveBehaviourSession()
+        views = session.update(0, [_track(4, 400, 200)], elapsed_s=0.0)
+        overlay = " ".join(format_overlay_lines(views[4]))
+        self.assertEqual(views[4]["behaviours"], [])
+        self.assertEqual(views[4]["live_score"], 0)
+        self.assertEqual(views[4]["combined_score"], 0)
+        self.assertEqual(views[4]["suspicious_level"], "none")
+        self.assertEqual(views[4]["contributing"], [])
+        self.assertEqual(session.history_length(4), 1)
+        self.assertNotIn("loitering:20", overlay)
+        self.assertNotIn("normal_movement", overlay)
+        self.assertTrue(any("need more frames" in item for item in views[4]["pending"]))
+        validate_behaviour_result(session.last_results[4])
+
+    def test_loitering_score_updates_only_after_persistent_history(self) -> None:
+        session = LiveBehaviourSession()
+        views = {}
+        for second in range(17):
+            views = session.update(second, [_track(1, 400, 200)], elapsed_s=float(second))
+            if second < 15:
+                self.assertEqual(views[1]["behaviours"], [])
+                self.assertEqual(views[1]["live_score"], 0)
+                self.assertTrue(any(item.startswith("loitering waiting") for item in views[1]["pending"]))
+        self.assertEqual(session.history_length(1), 17)
+        self.assertEqual(views[1]["behaviours"], [{"type": "loitering", "score": 21}])
+        self.assertEqual(views[1]["live_score"], 21)
+        self.assertEqual(views[1]["suspicious_level"], "none")
+        self.assertEqual(views[1]["contributing"], [])
+        overlay = format_overlay_lines(views[1])
+        self.assertEqual(overlay[0], "loitering:21")
+        self.assertIn("level=none", overlay[1])
+        self.assertEqual(overlay[2], "contrib=none")
+        validate_behaviour_result(session.last_results[1])
+
+    def test_multiple_people_keep_separate_histories_and_scores(self) -> None:
+        session = LiveBehaviourSession()
+        views = {}
+        for second in range(16):
+            views = session.update(
+                second,
+                [_track(1, 400, 200), _track(2, 240 + second * 80, 200)],
+                elapsed_s=float(second),
+            )
+        self.assertEqual(set(views), {1, 2})
+        self.assertEqual(session.history_length(1), 16)
+        self.assertEqual(session.history_length(2), 16)
+        self.assertEqual(views[1]["behaviours"], [{"type": "loitering", "score": 20}])
+        self.assertNotIn("loitering", {item["type"] for item in views[2]["behaviours"]})
+        self.assertEqual(views[1]["suspicious_level"], "none")
+        self.assertEqual(views[2]["suspicious_level"], "none")
+        validate_behaviour_result(session.last_results[1])
+        validate_behaviour_result(session.last_results[2])
+
+    def test_empty_frames_do_not_reset_history(self) -> None:
+        session = LiveBehaviourSession()
+        session.update(0, [_track(8, 400, 200)], elapsed_s=0.0)
+        session.update(1, [], elapsed_s=1.0)
+        session.update(2, None, elapsed_s=2.0)
+        views = session.update(3, [_track(8, 400, 200)], elapsed_s=3.0)
+        self.assertEqual(session.store.person_ids(), [8])
+        self.assertEqual([record.frame_id for record in session.store.records_for(8)], [0, 3])
+        self.assertEqual(views[8]["live_score"], 0)
+        self.assertEqual(session.history_length(8), 2)
+
+    def test_missing_optional_zone_and_center_still_score(self) -> None:
+        session = LiveBehaviourSession()
+        box = [365, 20, 435, 200]
+        views = session.update(
+            0,
+            [{"person_id": 6, "bbox": box}],
+            elapsed_s=0.0,
+        )
+        self.assertEqual(session.last_frame["tracks"][0]["center"], [400.0, 110.0])
+        self.assertNotIn("zone", session.last_frame["tracks"][0])
+        self.assertEqual(views[6]["behaviours"], [])
+        self.assertTrue(any("repeated_shelf_visit waiting" in item for item in views[6]["pending"]))
+        validate_behaviour_result(session.last_results[6])
+
+    def test_person_only_detections_do_not_claim_concealment_or_interaction(self) -> None:
+        session = LiveBehaviourSession()
+        views = {}
+        people = [{"class": "person", "confidence": 0.99, "bbox": [365, 20, 435, 200]}]
+        for second in range(6):
+            views = session.update(
+                second,
+                [_track(5, 400 + second * 8, 200)],
+                elapsed_s=float(second),
+                detections=people,
+            )
+        types = {item["type"] for item in views[5]["behaviours"]}
+        overlay = " ".join(format_overlay_lines(views[5]))
+        self.assertNotIn("object_interaction", types)
+        self.assertNotIn("possible_concealment", types)
+        self.assertNotIn("object_interaction:", overlay)
+        self.assertNotIn("possible_concealment:", overlay)
+        self.assertTrue(any("person boxes only" in item for item in views[5]["pending"]))
+
+    def test_abnormal_movement_score_updates_when_history_shows_high_speed(self) -> None:
+        session = LiveBehaviourSession()
+        first = session.update(
+            0,
+            [_track(3, 100, 200, height=80, width=40)],
+            elapsed_s=0.0,
+        )
+        self.assertEqual(first[3]["behaviours"], [])
+        second = session.update(
+            1,
+            [_track(3, 140, 200, height=80, width=40)],
+            elapsed_s=0.1,
+        )
+        self.assertEqual(second[3]["behaviours"], [{"type": "abnormal_movement", "score": 10}])
+        self.assertEqual(second[3]["live_score"], 10)
+        self.assertEqual(second[3]["suspicious_level"], "none")
+        self.assertIn("abnormal_movement:10", format_overlay_lines(second[3])[0])
+        validate_behaviour_result(session.last_results[3])
+
+    def test_member2_tracker_keeps_two_stable_ids(self) -> None:
+        sys.path.insert(0, str(REPO_ROOT / "member2-person-tracking"))
+        from src.pipeline import load_tracker_settings, make_tracker
+
+        tracker = make_tracker(load_tracker_settings())
+        seen = None
+        for step in range(8):
+            detections = [
+                {"class": "person", "confidence": 0.82, "bbox": [10 + step, 40, 140 + step, 420]},
+                {"class": "person", "confidence": 0.71, "bbox": [320 + step, 60, 450 + step, 430]},
+            ]
+            tracks = tracker.update(detections)
+            ids = sorted(int(track.track_id) for track in tracks)
+            self.assertEqual(len(ids), 2)
+            if seen is None:
+                seen = ids
+            else:
+                self.assertEqual(ids, seen)
 
 
 def _member2_pipeline_frames() -> list[dict]:

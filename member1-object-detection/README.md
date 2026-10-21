@@ -1,60 +1,92 @@
 # Object Detection Module
 
-## Purpose
+Pretrained YOLOv8 prototype for Member 1. It reports object boxes and class names from the loaded model. It does not track person IDs, score behaviour, or decide shoplifting.
 
-Detect people and other agreed object classes in CCTV or recorded retail video. This module is the first stage of the pipeline. It reports where objects are in each frame. It does not track identity across frames and it does not judge behaviour or risk.
+## Status
 
-Expected later technology may include YOLO-based object detection. No detector is included yet.
+Implemented as a local prototype. Default weights are COCO `yolov8n.pt` (80 classes). That is **not** a retail product catalogue: bottles, backpacks, handbags, cups, and other COCO labels can appear. Store SKUs, concealment, ownership of an item, and shoplifting are out of scope.
 
-## Responsible member
+## Weights on this machine
 
-Member 1.
+Inspected under `member2-person-tracking/models/`:
 
-Work only in `member1-object-detection/`. Use the branch `member1-object-detection`. Other members may read this folder. They should not overwrite it.
+| File | Classes | Use for Member 1 |
+| --- | --- | --- |
+| `yolov8n.pt` | 80 COCO classes | **Yes — default** |
+| `yolov8n-person-track.pt` | 1 (`item`) | No — person/item tracker, rejected |
+| `yolov8n_finetuned.pt` | 1 (`person`) | No |
+| `yolov8n-cam-multiperson.pt` | 1 (`item`) | No |
 
-## Expected input
+The prototype never silently substitutes a person-only file. It does not download weights.
 
-- A video file or CCTV frame source chosen for local development.
-- Frame size and frame index from that source.
-- Optional local settings in `configs/` and a local weight file in `models/` once implementation starts.
+You may copy `yolov8n.pt` into `member1-object-detection/models/` if you want a Member 1 local copy. The resolver checks that folder first, then the Member 2 models folder.
 
-Large weights and videos stay on disk. They are listed in `.gitignore`.
+## Commands
 
-## Expected output
+Webcam (close the Member 2 dashboard first — DirectShow does not share the camera):
 
-One detection result per frame, as defined in [docs/api-contract.md](../docs/api-contract.md):
+```bash
+python member1-object-detection/src/member1_live_demo.py --source webcam
+```
+
+Video file:
+
+```bash
+python member1-object-detection/src/member1_live_demo.py --source path/to/clip.mp4 --no-window --json-out member1-object-detection/outputs/detections.jsonl
+```
+
+Headless OpenCV builds need `--no-window`. Optional filters: `--classes bottle,backpack,handbag --conf 0.4 --weights member2-person-tracking/models/yolov8n.pt`.
+
+Tests:
+
+```bash
+python -m unittest discover -s tests -p "test_*.py" -v
+```
+
+Run from `member1-object-detection/`. Mocked tests do not need a webcam. `test_real_model_smoke.py` loads `yolov8n.pt` when that file exists.
+
+## JSON contract
+
+Prototype result (fields come from the model, not from this example):
 
 ```json
 {
-  "frame_id": 100,
+  "frame_id": 12,
+  "timestamp": 1.2,
+  "model": "yolov8n.pt",
+  "note": "Member 1 pretrained YOLO prototype. Detections are COCO classes from the loaded weights. This is not retail SKU recognition, concealment, object-to-person ownership, or shoplifting.",
+  "error": null,
   "detections": [
     {
-      "class": "person",
-      "confidence": 0.92,
-      "bbox": [100, 120, 250, 400]
+      "detection_id": 1,
+      "class_id": 39,
+      "class_name": "bottle",
+      "confidence": 0.87,
+      "bbox": {"x1": 120.2, "y1": 80.4, "x2": 190.9, "y2": 260.1}
     }
   ]
 }
 ```
 
-`bbox` is `[x_min, y_min, x_max, y_max]` in pixels, origin at the top-left. The class `person` is what tracking requires.
+`pipeline_detections(result)` maps that onto the team handoff in [docs/api-contract.md](../docs/api-contract.md): `class`, `confidence`, `bbox` as `[x_min, y_min, x_max, y_max]`. Extra prototype fields stay in this module until the team extends the shared contract.
 
-During local development, write sample results under `outputs/`. Do not commit that folder's contents.
+Python API: `ObjectDetector.detect_objects(frame, frame_id, timestamp)`.
 
-## Future integration point
+## Integration boundaries
 
-Member 2 reads these detection results in the person tracking module. Until `integration/pipeline/` exists, hand off a JSON file that matches the contract. Do not call tracking code from this folder.
+- **Member 2** keeps person detection, ByteTrack IDs, and zones.
+- **Member 1** only emits object boxes. Overlap with a person box is not ownership.
+- **Member 3** scoring rules are unchanged. Object detections are not auto-labelled as interaction, concealment, or shoplifting.
+- **Member 4** may later consume these boxes through an agreed interface.
+
+The dashboard Object Detection page, when enabled, reuses the Member 2 live session frames. Do not start this webcam demo at the same time as the dashboard.
 
 ## Folder guide
 
 | Path | Use |
 | --- | --- |
-| `src/` | Detection code, when implementation starts |
-| `tests/` | Tests for this module only |
-| `models/` | Local weight files. Not committed |
-| `configs/` | Detection settings |
-| `outputs/` | Local detection JSON and debug artefacts. Not committed |
-
-## Status
-
-Structure only. Implementation has not started.
+| `src/` | Detector, capture, overlay, live demo |
+| `tests/` | Mocked unit tests and optional real-weight smoke |
+| `models/` | Optional local copy of COCO weights (gitignored) |
+| `configs/detector.yaml` | Confidence, image size, device |
+| `outputs/` | JSONL dumps. Not committed |

@@ -8,6 +8,8 @@ export default defineConfig({
     proxy: {
       "/api": "http://127.0.0.1:8765",
       "/stream.mjpg": "http://127.0.0.1:8765",
+      "/stream_behaviour.mjpg": "http://127.0.0.1:8765",
+      "/stream_objects.mjpg": "http://127.0.0.1:8765",
     },
   },
   build: { outDir: "ui_build", emptyOutDir: true },

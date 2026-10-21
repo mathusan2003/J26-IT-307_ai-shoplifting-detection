@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
+import Alerts from "./Alerts.jsx";
+import BehaviourAnalysis from "./BehaviourAnalysis.jsx";
+import ObjectDetection from "./ObjectDetection.jsx";
 
 const NAV = [
-  ["Dashboard", "idle"],
-  ["Object Detection", "idle"],
-  ["Tracking", "active"],
-  ["Behavior Analysis", "idle"],
-  ["Risk Assessment", "idle"],
-  ["Predictions", "idle"],
-  ["Alerts", "idle"],
-  ["Reports", "idle"],
-  ["Settings", "idle"],
+  { label: "Dashboard", page: null },
+  { label: "Object Detection", page: "objects" },
+  { label: "Tracking", page: "tracking" },
+  { label: "Behavior Analysis", page: "behaviour" },
+  { label: "Risk Assessment", page: null },
+  { label: "Predictions", page: null },
+  { label: "Alerts", page: "alerts" },
+  { label: "Reports", page: null },
+  { label: "Settings", page: null },
 ];
 
 function displayZone(zone) {
@@ -23,10 +26,36 @@ function statusClass(status) {
   return "muted";
 }
 
+const LIVE_WEBCAM = {
+  id: "webcam",
+  file: "webcam",
+  label: "Live webcam",
+  group: "live",
+  group_label: "Live camera",
+  description: "Laptop camera through the shared Member 2 live session",
+  camera: "Live webcam",
+};
+
+function mergeSources(sources, currentSource) {
+  const rows = Array.isArray(sources) ? [...sources] : [];
+  if (!rows.some((item) => item.id === "webcam")) rows.unshift(LIVE_WEBCAM);
+  if (currentSource && !rows.some((item) => item.id === currentSource || item.file === currentSource)) {
+    rows.push({
+      id: currentSource,
+      file: currentSource,
+      label: currentSource,
+      group_label: "Live camera",
+      description: currentSource,
+    });
+  }
+  return rows;
+}
+
 export default function App() {
   const [state, setState] = useState(null);
   const [sources, setSources] = useState([]);
   const [streamKey, setStreamKey] = useState(0);
+  const [page, setPage] = useState("tracking");
 
   async function postControl(body) {
     const response = await fetch("/api/control", {
@@ -43,17 +72,24 @@ export default function App() {
   }
 
   useEffect(() => {
-    fetch("/api/sources")
-      .then((res) => res.json())
-      .then((payload) => setSources(payload.videos || []))
-      .catch(() => setSources([]));
+    function loadSources() {
+      fetch("/api/sources")
+        .then((res) => res.json())
+        .then((payload) => setSources(payload.videos || []))
+        .catch(() => setSources([]));
+    }
+    loadSources();
     const poll = setInterval(() => {
       fetch("/api/state")
         .then((res) => res.json())
         .then(setState)
         .catch(() => {});
     }, 700);
-    return () => clearInterval(poll);
+    const sourcePoll = setInterval(loadSources, 4000);
+    return () => {
+      clearInterval(poll);
+      clearInterval(sourcePoll);
+    };
   }, []);
 
   const videoTime = state?.timestamp || "00:00:00.000";
@@ -65,8 +101,9 @@ export default function App() {
   const peopleNow = Math.max(summary.people_now ?? 0, summary.detections_now ?? 0, active.length);
   const zones = state?.zones || { Entrance: 0, "Inside Store": 0, Checkout: 0 };
   const momentEvents = (state?.events || []).filter((event) => event.time === videoTime);
+  const sourceList = mergeSources(sources, state?.source);
   const grouped = [];
-  for (const item of sources) {
+  for (const item of sourceList) {
     const key = item.group_label || "Other clips";
     const last = grouped[grouped.length - 1];
     if (!last || last.label !== key) grouped.push({ label: key, items: [item] });
@@ -110,11 +147,21 @@ export default function App() {
           </div>
         </div>
         <nav>
-          {NAV.map(([label, kind]) => (
-            <button key={label} className={`nav ${kind}`} type="button">
-              {label}
-            </button>
-          ))}
+          {NAV.map((item) => {
+            const active = item.page && item.page === page;
+            return (
+              <button
+                key={item.label}
+                className={`nav ${active ? "active" : "idle"}`}
+                type="button"
+                onClick={() => {
+                  if (item.page) setPage(item.page);
+                }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
         <div className="side-foot">
           <span className="dot" /> System Status
@@ -134,6 +181,27 @@ export default function App() {
           </div>
         </header>
 
+        {page === "alerts" ? (
+          <Alerts state={state} />
+        ) : page === "behaviour" ? (
+          <BehaviourAnalysis
+            state={state}
+            sources={sourceList}
+            postControl={postControl}
+            streamKey={streamKey}
+            setStreamKey={setStreamKey}
+            selectedId={selected?.id}
+            onSelectPerson={(personId) => postControl({ action: "select", person_id: personId })}
+          />
+        ) : page === "objects" ? (
+          <ObjectDetection
+            state={state}
+            sources={sourceList}
+            postControl={postControl}
+            streamKey={streamKey}
+            setStreamKey={setStreamKey}
+          />
+        ) : (
         <section className="page">
           <h1>AI SHOPLIFTING DETECTION SYSTEM</h1>
           <div className="grid">
@@ -152,7 +220,7 @@ export default function App() {
                     setStreamKey((value) => value + 1);
                   }}
                 >
-                  <option value="">Select panel scenario / camera</option>
+                  <option value="">Select live webcam or a clip</option>
                   {grouped.map((group) => (
                     <optgroup key={group.label} label={group.label}>
                       {group.items.map((item) => (
@@ -175,7 +243,12 @@ export default function App() {
                   <div className="scenario-chip">{state.scenario.description}</div>
                 )}
                 {state?.status === "loading" && <div className="overlay">Loading YOLOv8 detector… first start takes a minute on CPU</div>}
-                {state?.paused && state?.status !== "loading" && <div className="overlay">Paused — click Resume Tracking</div>}
+                {state?.source_error && state?.status !== "loading" && (
+                  <div className="overlay">{state.source_error}</div>
+                )}
+                {!state?.source && !state?.source_error && state?.status !== "loading" && (
+                  <div className="overlay">Select Live webcam or a video clip to start the shared session.</div>
+                )}
               </div>
             </div>
 
@@ -295,8 +368,8 @@ export default function App() {
           <div className="lower">
             <div className="card">
               <h3>TRACK CONTROLS</h3>
-              <button className="primary" type="button" onClick={() => postControl({ action: state?.paused ? "resume" : "pause" })}>
-                {state?.paused ? "Resume Tracking" : "Pause Tracking"}
+              <button className="primary" type="button" onClick={() => postControl({ action: (state == null || state.paused) ? "resume" : "pause" })}>
+                {(state == null || state.paused) ? "Resume Tracking" : "Pause Tracking"}
               </button>
               <button type="button" onClick={() => postControl({ action: "reset" })}>Reset View</button>
               <p className="hint">YOLOv8n person detector + ByteTrack + Kalman. No shoplifting classification.</p>
@@ -338,6 +411,7 @@ export default function App() {
           </div>
           <footer>ByteTrack is used for robust multi-person tracking and consistent ID assignment across frames.</footer>
         </section>
+        )}
       </main>
     </div>
   );
