@@ -42,6 +42,8 @@ def load_model():
 class HistoricalPredictionRequest(BaseModel):
     area: str = Field(min_length=1)
     date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    previous_day_count: int = Field(ge=0)
+    previous_7_day_count: int = Field(ge=0)
 
 
 @app.get("/")
@@ -52,12 +54,32 @@ def home():
     }
 
 
-@app.get("/health")
-def health():
-    return {
-        "status": "ok",
-        "model_loaded": model is not None,
-    }
+@app.get("/api/historical-counts")
+def historical_counts(area: str, date: str):
+    if not area.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Area is required",
+        )
+
+    try:
+        counts = get_automatic_historical_counts(
+            csv_path=BASE_DIR / "Crime_Data_from_2020_to_Present.csv",
+            area=area.strip(),
+            prediction_date=date,
+        )
+        return {
+            "area": area.strip(),
+            "prediction_date": date,
+            **counts,
+        }
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
 
 
 
@@ -70,21 +92,20 @@ def predict_historical(request: HistoricalPredictionRequest):
         )
 
     try:
-        counts = get_automatic_historical_counts(
-            csv_path=BASE_DIR / "Crime_Data_from_2020_to_Present.csv",
-            area=request.area.strip(),
-            prediction_date=request.date,
-        )
-
         result = predict_historical_incidents(
             model=model,
             area=request.area.strip(),
             date=request.date,
-            previous_day_count=counts["previous_day_count"],
-            previous_7_day_count=counts["previous_7_day_count"],
+            previous_day_count=request.previous_day_count,
+            previous_7_day_count=request.previous_7_day_count,
         )
 
-        result.update(counts)
+        result.update({
+            "previous_day_count": request.previous_day_count,
+            "previous_7_day_count": request.previous_7_day_count,
+            "count_source": "User-provided inputs",
+        })
+
         return result
 
     except Exception as exc:
