@@ -1,0 +1,54 @@
+{
+  "synthetic": true,
+  "not_real_cctv": true,
+  "purpose": "Pipeline fixtures for the existing behaviour feature extractor and detectors. Not a real-world evaluation set and not a train/test split.",
+  "seed": 13,
+  "jitter_px": 0.0,
+  "fps": 25,
+  "time_convention": "Tracking JSON has no timestamp. frame_id increases by fps once per second. Member 3 uses frame_id / fps when a timestamp is absent.",
+  "zone_convention": "Tracking JSON has no zone field. The foot point is the bottom centre of bbox and is placed inside the polygons in configs/zones.json.",
+  "label_basis": "Motion plan written by this generator. Not detector output and not a human review.",
+  "object_interaction": "Possible concealment has a separate Member 1 detection file. A missing file or a file with only person boxes is rejected.",
+  "sequences": [
+    {
+      "sequence_id": "normal_shopping",
+      "scenario": "normal_shopping",
+      "person_id": 11,
+      "tracking": "tracking/normal_shopping.json",
+      "labels": "labels/normal_shopping.json",
+      "detections": null
+    },
+    {
+      "sequence_id": "loitering",
+      "scenario": "loitering",
+      "person_id": 12,
+      "tracking": "tracking/loitering.json",
+      "labels": "labels/loitering.json",
+      "detections": null
+    },
+    {
+      "sequence_id": "repeated_shelf_visits",
+      "scenario": "repeated_shelf_visits",
+      "person_id": 13,
+      "tracking": "tracking/repeated_shelf_visits.json",
+      "labels": "labels/repeated_shelf_visits.json",
+      "detections": null
+    },
+    {
+      "sequence_id": "abnormal_movement",
+      "scenario": "abnormal_movement",
+      "person_id": 14,
+      "tracking": "tracking/abnormal_movement.json",
+      "labels": "labels/abnormal_movement.json",
+      "detections": null
+    },
+    {
+      "sequence_id": "possible_concealment",
+      "scenario": "possible_concealment",
+      "person_id": 15,
+      "tracking": "tracking/possible_concealment.json",
+      "labels": "labels/possible_concealment.json",
+      "detections": "detections/possible_concealment.json"
+    }
+  ]
+}

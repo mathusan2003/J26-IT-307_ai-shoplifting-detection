@@ -1,0 +1,566 @@
+{
+  "task": "synthetic_tracking_behaviour_multilabel",
+  "synthetic": true,
+  "not_real_cctv": true,
+  "real_world_accuracy": false,
+  "label_source": "generator_motion_plan",
+  "label_basis": "Motion plan written by src/synthetic_tracking.py. Not detector output and not a human review.",
+  "mixed_with_model1_video_evaluation": false,
+  "replaces_existing_behaviour_model": false,
+  "annotation_format": "multi_label",
+  "why_multi_label": "The concealment scenario is labelled both object_interaction and possible_concealment. Normal shopping is the all-absent checklist. A single exclusive class would hide that overlap.",
+  "feature_names": [
+    "duration_s",
+    "path_length_px",
+    "net_displacement_px",
+    "mean_speed",
+    "max_speed",
+    "speed_std",
+    "reversal_count",
+    "tortuosity",
+    "longest_still_s",
+    "max_same_shelf_visits",
+    "shelf_visit_total",
+    "shelf_slow_s",
+    "bbox_shrink_ratio",
+    "object_overlap_frames",
+    "object_lost"
+  ],
+  "behaviours": [
+    "loitering",
+    "repeated_shelf_visit",
+    "abnormal_movement",
+    "object_interaction",
+    "possible_concealment"
+  ],
+  "seed": 13,
+  "copies_per_scenario": 10,
+  "split_unit": "sequence_id",
+  "split_counts": {
+    "train": 30,
+    "validation": 5,
+    "test": 15
+  },
+  "scaler_fit_on": "train",
+  "train_feature_mean": [
+    13.2,
+    642.1124882437788,
+    120.52717087572132,
+    75.54250641443167,
+    87.37565902257606,
+    4.098899097901766,
+    1.3666666666666667,
+    105.23569331520338,
+    5.0,
+    0.8,
+    0.8,
+    0.6,
+    0.88,
+    1.2,
+    0.2
+  ],
+  "hyperparameter_search_on_test": false,
+  "fit_seconds": 0.016575600020587444,
+  "train": {
+    "behaviours": {
+      "loitering": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 30,
+        "confusion_matrix": {
+          "true_positive": 6,
+          "false_positive": 0,
+          "true_negative": 24,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "repeated_shelf_visit": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 30,
+        "confusion_matrix": {
+          "true_positive": 6,
+          "false_positive": 0,
+          "true_negative": 24,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "abnormal_movement": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 30,
+        "confusion_matrix": {
+          "true_positive": 6,
+          "false_positive": 0,
+          "true_negative": 24,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "object_interaction": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 30,
+        "confusion_matrix": {
+          "true_positive": 6,
+          "false_positive": 0,
+          "true_negative": 24,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "possible_concealment": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 30,
+        "confusion_matrix": {
+          "true_positive": 6,
+          "false_positive": 0,
+          "true_negative": 24,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      }
+    },
+    "exact_match_accuracy": 1.0,
+    "macro_f1": 1.0,
+    "sequences": [
+      {
+        "sequence_id": "normal_shopping_00",
+        "scenario": "normal_shopping",
+        "split": "train"
+      },
+      {
+        "sequence_id": "loitering_00",
+        "scenario": "loitering",
+        "split": "train"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_00",
+        "scenario": "repeated_shelf_visits",
+        "split": "train"
+      },
+      {
+        "sequence_id": "abnormal_movement_00",
+        "scenario": "abnormal_movement",
+        "split": "train"
+      },
+      {
+        "sequence_id": "possible_concealment_00",
+        "scenario": "possible_concealment",
+        "split": "train"
+      },
+      {
+        "sequence_id": "normal_shopping_01",
+        "scenario": "normal_shopping",
+        "split": "train"
+      },
+      {
+        "sequence_id": "loitering_01",
+        "scenario": "loitering",
+        "split": "train"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_01",
+        "scenario": "repeated_shelf_visits",
+        "split": "train"
+      },
+      {
+        "sequence_id": "abnormal_movement_01",
+        "scenario": "abnormal_movement",
+        "split": "train"
+      },
+      {
+        "sequence_id": "possible_concealment_01",
+        "scenario": "possible_concealment",
+        "split": "train"
+      },
+      {
+        "sequence_id": "normal_shopping_02",
+        "scenario": "normal_shopping",
+        "split": "train"
+      },
+      {
+        "sequence_id": "loitering_02",
+        "scenario": "loitering",
+        "split": "train"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_02",
+        "scenario": "repeated_shelf_visits",
+        "split": "train"
+      },
+      {
+        "sequence_id": "abnormal_movement_02",
+        "scenario": "abnormal_movement",
+        "split": "train"
+      },
+      {
+        "sequence_id": "possible_concealment_02",
+        "scenario": "possible_concealment",
+        "split": "train"
+      },
+      {
+        "sequence_id": "normal_shopping_03",
+        "scenario": "normal_shopping",
+        "split": "train"
+      },
+      {
+        "sequence_id": "loitering_03",
+        "scenario": "loitering",
+        "split": "train"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_03",
+        "scenario": "repeated_shelf_visits",
+        "split": "train"
+      },
+      {
+        "sequence_id": "abnormal_movement_03",
+        "scenario": "abnormal_movement",
+        "split": "train"
+      },
+      {
+        "sequence_id": "possible_concealment_03",
+        "scenario": "possible_concealment",
+        "split": "train"
+      },
+      {
+        "sequence_id": "normal_shopping_04",
+        "scenario": "normal_shopping",
+        "split": "train"
+      },
+      {
+        "sequence_id": "loitering_04",
+        "scenario": "loitering",
+        "split": "train"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_04",
+        "scenario": "repeated_shelf_visits",
+        "split": "train"
+      },
+      {
+        "sequence_id": "abnormal_movement_04",
+        "scenario": "abnormal_movement",
+        "split": "train"
+      },
+      {
+        "sequence_id": "possible_concealment_04",
+        "scenario": "possible_concealment",
+        "split": "train"
+      },
+      {
+        "sequence_id": "normal_shopping_05",
+        "scenario": "normal_shopping",
+        "split": "train"
+      },
+      {
+        "sequence_id": "loitering_05",
+        "scenario": "loitering",
+        "split": "train"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_05",
+        "scenario": "repeated_shelf_visits",
+        "split": "train"
+      },
+      {
+        "sequence_id": "abnormal_movement_05",
+        "scenario": "abnormal_movement",
+        "split": "train"
+      },
+      {
+        "sequence_id": "possible_concealment_05",
+        "scenario": "possible_concealment",
+        "split": "train"
+      }
+    ]
+  },
+  "validation": {
+    "behaviours": {
+      "loitering": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 5,
+        "confusion_matrix": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "true_negative": 4,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "repeated_shelf_visit": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 5,
+        "confusion_matrix": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "true_negative": 4,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "abnormal_movement": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 5,
+        "confusion_matrix": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "true_negative": 4,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "object_interaction": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 5,
+        "confusion_matrix": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "true_negative": 4,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "possible_concealment": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 5,
+        "confusion_matrix": {
+          "true_positive": 1,
+          "false_positive": 0,
+          "true_negative": 4,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      }
+    },
+    "exact_match_accuracy": 1.0,
+    "macro_f1": 1.0,
+    "sequences": [
+      {
+        "sequence_id": "normal_shopping_06",
+        "scenario": "normal_shopping",
+        "split": "validation"
+      },
+      {
+        "sequence_id": "loitering_06",
+        "scenario": "loitering",
+        "split": "validation"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_06",
+        "scenario": "repeated_shelf_visits",
+        "split": "validation"
+      },
+      {
+        "sequence_id": "abnormal_movement_06",
+        "scenario": "abnormal_movement",
+        "split": "validation"
+      },
+      {
+        "sequence_id": "possible_concealment_06",
+        "scenario": "possible_concealment",
+        "split": "validation"
+      }
+    ]
+  },
+  "test": {
+    "behaviours": {
+      "loitering": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 15,
+        "confusion_matrix": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "true_negative": 12,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "repeated_shelf_visit": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 15,
+        "confusion_matrix": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "true_negative": 12,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "abnormal_movement": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 15,
+        "confusion_matrix": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "true_negative": 12,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "object_interaction": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 15,
+        "confusion_matrix": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "true_negative": 12,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      },
+      "possible_concealment": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "specificity": 1.0,
+        "support": 15,
+        "confusion_matrix": {
+          "true_positive": 3,
+          "false_positive": 0,
+          "true_negative": 12,
+          "false_negative": 0
+        },
+        "false_alarm_rate": 0.0
+      }
+    },
+    "exact_match_accuracy": 1.0,
+    "macro_f1": 1.0,
+    "sequences": [
+      {
+        "sequence_id": "normal_shopping_07",
+        "scenario": "normal_shopping",
+        "split": "test"
+      },
+      {
+        "sequence_id": "loitering_07",
+        "scenario": "loitering",
+        "split": "test"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_07",
+        "scenario": "repeated_shelf_visits",
+        "split": "test"
+      },
+      {
+        "sequence_id": "abnormal_movement_07",
+        "scenario": "abnormal_movement",
+        "split": "test"
+      },
+      {
+        "sequence_id": "possible_concealment_07",
+        "scenario": "possible_concealment",
+        "split": "test"
+      },
+      {
+        "sequence_id": "normal_shopping_08",
+        "scenario": "normal_shopping",
+        "split": "test"
+      },
+      {
+        "sequence_id": "loitering_08",
+        "scenario": "loitering",
+        "split": "test"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_08",
+        "scenario": "repeated_shelf_visits",
+        "split": "test"
+      },
+      {
+        "sequence_id": "abnormal_movement_08",
+        "scenario": "abnormal_movement",
+        "split": "test"
+      },
+      {
+        "sequence_id": "possible_concealment_08",
+        "scenario": "possible_concealment",
+        "split": "test"
+      },
+      {
+        "sequence_id": "normal_shopping_09",
+        "scenario": "normal_shopping",
+        "split": "test"
+      },
+      {
+        "sequence_id": "loitering_09",
+        "scenario": "loitering",
+        "split": "test"
+      },
+      {
+        "sequence_id": "repeated_shelf_visits_09",
+        "scenario": "repeated_shelf_visits",
+        "split": "test"
+      },
+      {
+        "sequence_id": "abnormal_movement_09",
+        "scenario": "abnormal_movement",
+        "split": "test"
+      },
+      {
+        "sequence_id": "possible_concealment_09",
+        "scenario": "possible_concealment",
+        "split": "test"
+      }
+    ]
+  },
+  "model_path": "C:\\Users\\HP\\Documents\\4thyear-research project\\member3-behaviour-analysis\\models\\synthetic_behaviour_classifier.json",
+  "schema_path": "C:\\Users\\HP\\Documents\\4thyear-research project\\member3-behaviour-analysis\\models\\synthetic_behaviour_feature_schema.json",
+  "limitation": "SYNTHETIC pipeline check. These metrics are not real-world accuracy and are not independent of the motion plans used to generate the tracks."
+}

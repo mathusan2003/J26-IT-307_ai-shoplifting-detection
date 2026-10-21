@@ -92,10 +92,7 @@ class RealVideoTests(unittest.TestCase):
             self.assertNotIn(video["video_id"], seen)
             seen.add(video["video_id"])
             path = VIDEO_ROOT / video["video_id"]
-            if not path.is_file():
-                self.skipTest(
-                    f"Video dataset not available: {video['video_id']}"
-                )
+            self.assertTrue(path.is_file(), video["video_id"])
             self.assertEqual(path.stat().st_size, video["bytes"])
             self.assertEqual(file_sha256(path), video["sha256"])
             self.assertTrue(video["readable"])

@@ -1,0 +1,32 @@
+{
+  "synthetic": true,
+  "real_world_accuracy": false,
+  "feature_names": [
+    "duration_s",
+    "path_length_px",
+    "net_displacement_px",
+    "mean_speed",
+    "max_speed",
+    "speed_std",
+    "reversal_count",
+    "tortuosity",
+    "longest_still_s",
+    "max_same_shelf_visits",
+    "shelf_visit_total",
+    "shelf_slow_s",
+    "bbox_shrink_ratio",
+    "object_overlap_frames",
+    "object_lost"
+  ],
+  "behaviours": [
+    "loitering",
+    "repeated_shelf_visit",
+    "abnormal_movement",
+    "object_interaction",
+    "possible_concealment"
+  ],
+  "annotation_format": "multi_label",
+  "why_multi_label": "A sequence can have more than one intended behaviour. The concealment plan is labelled object_interaction and possible_concealment. Normal shopping is the all-absent case.",
+  "source_features": "src/features.py FEATURE_NAMES",
+  "does_not_replace": "models/behaviour_model.json"
+}
