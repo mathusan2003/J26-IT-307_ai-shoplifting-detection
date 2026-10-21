@@ -174,3 +174,51 @@ def predict_historical_incidents(model, area, date, previous_day_count, previous
         "predicted_incident_count": round(predicted_count, 2),
         "prediction_type": "Next-day historical incident count",
     }
+
+
+def get_automatic_historical_counts(csv_path, area, prediction_date):
+    """
+    Calculate previous-day and previous-7-day shoplifting counts
+    automatically from the historical crime dataset.
+    """
+
+    import pandas as pd
+    from datetime import datetime, timedelta
+
+    target_date = datetime.strptime(
+        prediction_date, "%Y-%m-%d"
+    ).date()
+
+    start_date = target_date - timedelta(days=7)
+    previous_day = target_date - timedelta(days=1)
+
+    df = pd.read_csv(
+        csv_path,
+        usecols=["DATE OCC", "AREA NAME", "Crm Cd Desc"]
+    )
+
+    # Keep shoplifting-related records for the selected area.
+    df = df[
+        (df["AREA NAME"].str.strip().str.lower() == area.strip().lower())
+        & (df["Crm Cd Desc"].str.contains("SHOPLIFT", case=False, na=False))
+    ].copy()
+
+    df["DATE OCC"] = pd.to_datetime(
+        df["DATE OCC"], errors="coerce"
+    )
+
+    df = df.dropna(subset=["DATE OCC"])
+
+    dates = df["DATE OCC"].dt.date
+
+    previous_day_count = int((dates == previous_day).sum())
+
+    previous_7_day_count = int(
+        ((dates >= start_date) & (dates < target_date)).sum()
+    )
+
+    return {
+        "previous_day_count": previous_day_count,
+        "previous_7_day_count": previous_7_day_count,
+        "count_source": "Historical crime dataset"
+    }

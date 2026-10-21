@@ -68,20 +68,19 @@ def prepare_data():
     )
 
     daily = daily.sort_values(["AREA NAME", "DATE"])
+    daily["TARGET_NEXT_DAY"] = daily.groupby("AREA NAME")["INCIDENT_COUNT"].shift(-1)
 
-    daily["TARGET_NEXT_DAY"] = (
-        daily.groupby("AREA NAME")["INCIDENT_COUNT"].shift(-1)
-    )
+    target_dates = daily["DATE"] + pd.Timedelta(days=1)
 
-    daily["DAY_OF_WEEK"] = daily["DATE"].dt.dayofweek
-    daily["MONTH"] = daily["DATE"].dt.month
-    daily["DAY_OF_MONTH"] = daily["DATE"].dt.day
+    daily["DAY_OF_WEEK"] = target_dates.dt.dayofweek
+    daily["MONTH"] = target_dates.dt.month
+    daily["DAY_OF_MONTH"] = target_dates.dt.day
 
     daily["LAG_1"] = daily["INCIDENT_COUNT"]
 
     daily["LAG_7"] = (
     daily.groupby("AREA NAME")["INCIDENT_COUNT"]
-    .transform(lambda s: s.shift(1).rolling(7).sum())
+    .transform(lambda s: s.rolling(7).sum())
 )
 
     daily = daily.dropna(subset=["TARGET_NEXT_DAY", "LAG_7"])
@@ -148,6 +147,17 @@ def main():
         test[target], predictions
     ) ** 0.5
 
+        # Baseline: use the previous day's count as the prediction.
+    baseline_predictions = test["LAG_1"].clip(lower=0)
+
+    baseline_mae = mean_absolute_error(
+        test[target], baseline_predictions
+    )
+
+    baseline_rmse = mean_squared_error(
+        test[target], baseline_predictions
+    ) ** 0.5
+
     metrics = {
         "model": "Random Forest Regressor",
         "split_date": str(split_date.date()),
@@ -155,6 +165,8 @@ def main():
         "testing_rows": len(test),
         "MAE": round(float(mae), 4),
         "RMSE": round(float(rmse), 4),
+        "Baseline_MAE": round(float(baseline_mae), 4),
+        "Baseline_RMSE": round(float(baseline_rmse), 4),
     }
 
     joblib.dump(model, MODEL_DIR / "historical_risk_model.joblib")

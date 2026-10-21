@@ -1,0 +1,17 @@
+[
+  {
+    "person_id": 12,
+    "risk_level": "medium",
+    "risk_score": 45
+  },
+  {
+    "person_id": 7,
+    "risk_level": "high",
+    "risk_score": 80
+  },
+  {
+    "person_id": 3,
+    "risk_level": "low",
+    "risk_score": 20
+  }
+]
