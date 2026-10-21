@@ -180,11 +180,23 @@ function App() {
               </div>
 
               <div className="heatmap-frame">
-                <img
-                  src="/person_density_heatmap.jpg"
-                  alt="Person-detection density heatmap"
-                />
-              </div>
+<video
+    controls
+    muted
+    loop
+    playsInline
+    preload="metadata"
+    style={{
+      display: 'block',
+      width: '100%',
+      height: 'auto',
+      borderRadius: '8px',
+    }}
+  >
+   <source src="/detected_video_h264.mp4" type="video/mp4" />
+    Your browser does not support video playback.
+  </video>
+</div>
 
               <div className="legend-row">
                 <span><i className="legend-dot blue" /> Lower density</span>
