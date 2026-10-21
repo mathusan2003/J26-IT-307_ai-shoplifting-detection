@@ -3,7 +3,9 @@
 A tracking sequence is an ordered list of per-frame objects. This module
 accepts the shared tracking contract (frame_id, tracks, person_id, bbox,
 center) and the extra fields this module needs when they are present
-(timestamp, zone or shelf, position).
+(timestamp, zone or shelf, position). Member 2 video telemetry may send
+``timestamp`` as elapsed seconds (a JSON number). Clock strings such as
+``HH:MM:SS`` are still accepted.
 """
 
 from __future__ import annotations
@@ -110,8 +112,15 @@ def _read_timestamp(container: dict[str, Any], label: str) -> str | None:
     if "timestamp" not in container or container["timestamp"] is None:
         return None
     timestamp = container["timestamp"]
+    if isinstance(timestamp, bool):
+        raise ValueError(f"{label} timestamp must be a non-empty string or a number of seconds")
+    if isinstance(timestamp, (int, float)):
+        if timestamp < 0:
+            raise ValueError(f"{label} timestamp must not be negative")
+        # Member 2 video telemetry writes elapsed seconds as a JSON number.
+        return f"{float(timestamp):.3f}"
     if not isinstance(timestamp, str) or timestamp.strip() == "":
-        raise ValueError(f"{label} timestamp must be a non-empty string")
+        raise ValueError(f"{label} timestamp must be a non-empty string or a number of seconds")
     return timestamp.strip()
 
 

@@ -59,19 +59,9 @@ def contract_frame(
     that clock when it is present, instead of ``frame_id / 25``. Live YOLO
     frames are slower than 25 fps, so frame_id alone under-counts time.
     """
-    cleaned = []
-    for track in tracks:
-        cleaned.append(
-            {
-                "person_id": int(track["person_id"]),
-                "bbox": [float(value) for value in track["bbox"]],
-                "center": [float(value) for value in track["center"]],
-            }
-        )
-    frame: dict[str, Any] = {"frame_id": int(frame_id), "tracks": cleaned}
-    if timestamp_s is not None:
-        frame["timestamp"] = f"{float(timestamp_s):.3f}"
-    return frame
+    from member2_adapter import frame_from_member2_tracks
+
+    return frame_from_member2_tracks(frame_id, tracks, elapsed_s=timestamp_s)
 
 
 def history_lengths(frames: list[dict[str, Any]]) -> dict[int, int]:
