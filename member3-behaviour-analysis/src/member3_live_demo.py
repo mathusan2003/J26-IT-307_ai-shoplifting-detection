@@ -22,7 +22,6 @@ from behaviour import analyse_tracking_frames
 from live_behaviour_view import (
     DEFAULT_WEIGHTS,
     MEMBER2_ROOT,
-    contract_frame,
     explain_live_detectors,
     has_non_person_objects,
     history_lengths,
@@ -32,6 +31,7 @@ from live_behaviour_view import (
     load_member2_tracker,
     probe_member2_live_pipeline,
 )
+from member2_adapter import frame_from_member2_tracks
 
 WINDOW_TITLE = "Retail Multi-Person Tracking"
 CAMERA_INDEX = 0
@@ -91,7 +91,7 @@ def main(argv: list[str] | None = None) -> int:
             elapsed = tick - started
             fps = 1.0 / max(1e-6, tick - last_tick)
             last_tick = tick
-            frame = contract_frame(frame_id, tracks, timestamp_s=elapsed)
+            frame = frame_from_member2_tracks(frame_id, tracks, elapsed_s=elapsed)
             history.append(frame)
             if len(history) > HISTORY_FRAMES:
                 history = history[-HISTORY_FRAMES:]

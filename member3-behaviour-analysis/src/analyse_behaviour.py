@@ -15,7 +15,7 @@ from pathlib import Path
 
 from behaviour import analyse_tracking_frames, load_detection_sequence, validate_behaviour_result, write_behaviour_results
 from config import load_settings, load_zones
-from tracking_input import load_tracking_sequence
+from member2_adapter import load_member2_tracking_sequence
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,9 +25,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, help="Where to write behaviour JSON. Also printed to stdout.")
     parser.add_argument("--config", type=Path, help="Behaviour threshold JSON")
     parser.add_argument("--zones", type=Path, help="Zone polygon JSON")
+    parser.add_argument(
+        "--source-fps",
+        type=float,
+        help="Stamp missing timestamps as frame_id / FPS. Use Member 2's video rate, not the live webcam clock.",
+    )
     args = parser.parse_args(argv)
 
-    frames = load_tracking_sequence(args.tracking)
+    frames = load_member2_tracking_sequence(args.tracking, source_fps=args.source_fps)
     detections = load_detection_sequence(args.detections) if args.detections else None
     results = analyse_tracking_frames(
         frames,
