@@ -87,3 +87,4 @@ results/videos/**
 !results/videos/.gitkeep
 results/reports/**
 !results/reports/.gitkeep
+member3-behaviour-analysis/datasets/
