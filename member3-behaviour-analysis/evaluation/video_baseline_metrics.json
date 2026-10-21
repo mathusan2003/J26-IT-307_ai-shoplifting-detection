@@ -81,7 +81,8 @@
       "false_positive": 7,
       "true_negative": 54,
       "false_negative": 6
-    }
+    },
+    "false_alarm_rate": 0.11475409836065574
   },
   "validation": {
     "accuracy": 0.7037037037037037,
@@ -95,7 +96,8 @@
       "false_positive": 4,
       "true_negative": 9,
       "false_negative": 4
-    }
+    },
+    "false_alarm_rate": 0.3076923076923077
   },
   "test": {
     "accuracy": 0.5555555555555556,
@@ -109,7 +111,8 @@
       "false_positive": 6,
       "true_negative": 7,
       "false_negative": 6
-    }
+    },
+    "false_alarm_rate": 0.46153846153846156
   },
   "majority_baseline_test": {
     "accuracy": 0.5185185185185185,
@@ -204,5 +207,83 @@
     "The motion model is a baseline. On the locked test split its F1 is below the majority-class F1 and below a duration-only model, so clip length is a confound and motion alone is weak.",
     "Three normal clips are byte-for-byte duplicates of other normal clips. Each duplicate pair is kept in one split and counted once.",
     "shoplifting-49.mp4 is missing. No replacement label was created."
-  ]
+  ],
+  "random_forest": {
+    "task": "video_level_normal_vs_shoplifting",
+    "label_source": "parent_folder",
+    "positive_class": "shoplifting",
+    "behaviour_labels_used": false,
+    "detects_behaviour_categories": false,
+    "type": "random_forest",
+    "library": "scikit-learn",
+    "n_estimators": 100,
+    "class_weight": "balanced",
+    "random_state": 13,
+    "threshold": 0.5,
+    "hyperparameter_selection": {
+      "split": "validation",
+      "criterion": "highest validation F1; ties prefer smaller max_depth, then larger min_samples_leaf",
+      "max_depth_grid": [
+        2,
+        4,
+        8
+      ],
+      "min_samples_leaf_grid": [
+        1,
+        3,
+        5
+      ],
+      "test_rows_used": false
+    },
+    "model": {
+      "max_depth": 4,
+      "min_samples_leaf": 1
+    },
+    "train": {
+      "accuracy": 0.976,
+      "precision": 0.9692307692307692,
+      "recall": 0.984375,
+      "f1": 0.9767441860465116,
+      "specificity": 0.9672131147540983,
+      "support": 125,
+      "confusion_matrix": {
+        "true_positive": 63,
+        "false_positive": 2,
+        "true_negative": 59,
+        "false_negative": 1
+      },
+      "false_alarm_rate": 0.03278688524590164
+    },
+    "validation": {
+      "accuracy": 0.7777777777777778,
+      "precision": 0.75,
+      "recall": 0.8571428571428571,
+      "f1": 0.7999999999999999,
+      "specificity": 0.6923076923076923,
+      "support": 27,
+      "confusion_matrix": {
+        "true_positive": 12,
+        "false_positive": 4,
+        "true_negative": 9,
+        "false_negative": 2
+      },
+      "false_alarm_rate": 0.3076923076923077
+    },
+    "test": {
+      "accuracy": 0.6296296296296297,
+      "precision": 0.6666666666666666,
+      "recall": 0.5714285714285714,
+      "f1": 0.6153846153846153,
+      "specificity": 0.6923076923076923,
+      "support": 27,
+      "confusion_matrix": {
+        "true_positive": 8,
+        "false_positive": 4,
+        "true_negative": 9,
+        "false_negative": 6
+      },
+      "false_alarm_rate": 0.3076923076923077
+    },
+    "limitation": "This comparison classifies a whole clip as normal or shoplifting. It does not detect loitering, repeated shelf visits, abnormal movement, object interaction, or possible concealment."
+  }
 }

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 import numpy as np
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
@@ -33,6 +34,10 @@ MODULE_ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = MODULE_ROOT / "models" / "video_baseline.json"
 METRICS_PATH = MODULE_ROOT / "evaluation" / "video_baseline_metrics.json"
 CANDIDATE_C = (0.01, 0.1, 1.0, 10.0)
+FOREST_DEPTHS = (2, 4, 8)
+FOREST_LEAVES = (1, 3, 5)
+FOREST_TREES = 100
+FOREST_RANDOM_STATE = 13
 
 
 def train_from_features(features: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -227,6 +232,135 @@ def _sigmoid(value: float) -> float:
         return float(1.0 / (1.0 + exponential))
     exponential = np.exp(value)
     return float(exponential / (1.0 + exponential))
+
+
+def false_alarm_rate(confusion: dict[str, int]) -> float:
+    """False positives divided by the normal clips in one split."""
+    negatives = confusion["false_positive"] + confusion["true_negative"]
+    if negatives == 0:
+        return 0.0
+    return confusion["false_positive"] / negatives
+
+
+def select_random_forest(
+    train_rows: Sequence[dict[str, Any]],
+    validation_rows: Sequence[dict[str, Any]],
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Choose depth and leaf size on validation F1. This function has no test argument."""
+    train_x, train_y = _matrix(train_rows)
+    chosen: tuple[Any, ...] | None = None
+    for depth in FOREST_DEPTHS:
+        for leaves in FOREST_LEAVES:
+            model = _fit_forest(train_x, train_y, depth, leaves)
+            validation_scores = _score_forest(model, validation_rows)
+            candidate = (validation_scores["f1"], -depth, leaves, model, validation_scores)
+            if chosen is None or candidate[:3] > chosen[:3]:
+                chosen = candidate
+    assert chosen is not None
+    _f1, _depth_key, _leaves, model, validation_scores = chosen
+    return model, validation_scores
+
+
+def random_forest_from_features(features: dict[str, Any]) -> dict[str, Any]:
+    """Fit a forest on the frozen video rows and score the test split once."""
+    names = features["feature_names"]
+    if names != feature_names():
+        raise ValueError("feature names do not match the motion baseline")
+    by_split = {
+        name: [row for row in features["rows"] if row["split"] == name]
+        for name in ("train", "validation", "test")
+    }
+    for name, rows in by_split.items():
+        if not rows:
+            raise ValueError(f"the {name} split has no videos")
+    model, validation_scores = select_random_forest(by_split["train"], by_split["validation"])
+    train_scores = _score_forest(model, by_split["train"])
+    test_scores = _score_forest(model, by_split["test"])
+    for scores in (train_scores, validation_scores, test_scores):
+        scores.pop("probabilities", None)
+        scores["false_alarm_rate"] = false_alarm_rate(scores["confusion_matrix"])
+    return {
+        "task": "video_level_normal_vs_shoplifting",
+        "label_source": "parent_folder",
+        "positive_class": POSITIVE_LABEL,
+        "behaviour_labels_used": False,
+        "detects_behaviour_categories": False,
+        "type": "random_forest",
+        "library": "scikit-learn",
+        "n_estimators": FOREST_TREES,
+        "class_weight": "balanced",
+        "random_state": FOREST_RANDOM_STATE,
+        "threshold": 0.5,
+        "hyperparameter_selection": {
+            "split": "validation",
+            "criterion": "highest validation F1; ties prefer smaller max_depth, then larger min_samples_leaf",
+            "max_depth_grid": list(FOREST_DEPTHS),
+            "min_samples_leaf_grid": list(FOREST_LEAVES),
+            "test_rows_used": False,
+        },
+        "model": {
+            "max_depth": model["max_depth"],
+            "min_samples_leaf": model["min_samples_leaf"],
+        },
+        "train": train_scores,
+        "validation": validation_scores,
+        "test": test_scores,
+        "limitation": (
+            "This comparison classifies a whole clip as normal or shoplifting. "
+            "It does not detect loitering, repeated shelf visits, abnormal movement, "
+            "object interaction, or possible concealment."
+        ),
+    }
+
+
+def run_random_forest_comparison() -> dict[str, Any]:
+    """Add the forest block to the saved video metrics without refitting logistic regression."""
+    features = load_json(FEATURES_PATH)
+    report = random_forest_from_features(features)
+    metrics = load_json(METRICS_PATH)
+    if metrics.get("behaviour_labels_used") is not False:
+        raise ValueError("video metrics must keep behaviour_labels_used false")
+    for split_name in ("train", "validation", "test"):
+        block = metrics[split_name]
+        block["false_alarm_rate"] = false_alarm_rate(block["confusion_matrix"])
+    metrics["random_forest"] = report
+    write_json(METRICS_PATH, metrics)
+    return report
+
+
+def _fit_forest(
+    features: np.ndarray,
+    labels: list[int],
+    max_depth: int,
+    min_samples_leaf: int,
+) -> dict[str, Any]:
+    classifier = RandomForestClassifier(
+        n_estimators=FOREST_TREES,
+        max_depth=max_depth,
+        min_samples_leaf=min_samples_leaf,
+        class_weight="balanced",
+        random_state=FOREST_RANDOM_STATE,
+        n_jobs=1,
+    )
+    classifier.fit(features, np.asarray(labels))
+    return {
+        "max_depth": max_depth,
+        "min_samples_leaf": min_samples_leaf,
+        "threshold": 0.5,
+        "classifier": classifier,
+    }
+
+
+def _score_forest(model: dict[str, Any], rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
+    features, truth = _matrix(rows)
+    probability = model["classifier"].predict_proba(features)[:, 1]
+    predicted = [int(value >= model["threshold"]) for value in probability]
+    metrics = binary_metrics(truth, predicted)
+    metrics["probabilities"] = [
+        {"video_id": row["video_id"], "label": row["label"], "shoplifting_probability": float(probability[index])}
+        for index, row in enumerate(rows)
+    ]
+    return metrics
 
 
 def main() -> int:

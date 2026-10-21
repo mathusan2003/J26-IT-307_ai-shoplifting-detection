@@ -1,0 +1,20 @@
+{
+  "record_type": "synthetic_scenario_label",
+  "synthetic": true,
+  "not_real_cctv": true,
+  "not_a_reviewed_annotation": true,
+  "sequence_id": "normal_shopping",
+  "scenario": "normal_shopping",
+  "person_id": 11,
+  "seed": 13,
+  "fps": 25,
+  "intended": {
+    "loitering": false,
+    "repeated_shelf_visit": false,
+    "abnormal_movement": false,
+    "object_interaction": false,
+    "possible_concealment": false
+  },
+  "label_basis": "motion plan written by the generator; not detector output and not a human review",
+  "real_world_accuracy": false
+}

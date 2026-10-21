@@ -1,0 +1,116 @@
+[
+  {
+    "frame_id": 0,
+    "detections": [
+      {
+        "class": "bottle",
+        "confidence": 0.91,
+        "bbox": [
+          735,
+          150,
+          770,
+          210
+        ]
+      }
+    ]
+  },
+  {
+    "frame_id": 25,
+    "detections": [
+      {
+        "class": "bottle",
+        "confidence": 0.91,
+        "bbox": [
+          735,
+          150,
+          770,
+          210
+        ]
+      }
+    ]
+  },
+  {
+    "frame_id": 50,
+    "detections": [
+      {
+        "class": "bottle",
+        "confidence": 0.91,
+        "bbox": [
+          735,
+          150,
+          770,
+          210
+        ]
+      }
+    ]
+  },
+  {
+    "frame_id": 75,
+    "detections": [
+      {
+        "class": "bottle",
+        "confidence": 0.91,
+        "bbox": [
+          735,
+          150,
+          770,
+          210
+        ]
+      }
+    ]
+  },
+  {
+    "frame_id": 100,
+    "detections": [
+      {
+        "class": "bottle",
+        "confidence": 0.91,
+        "bbox": [
+          735,
+          150,
+          770,
+          210
+        ]
+      }
+    ]
+  },
+  {
+    "frame_id": 125,
+    "detections": [
+      {
+        "class": "bottle",
+        "confidence": 0.91,
+        "bbox": [
+          735,
+          150,
+          770,
+          210
+        ]
+      }
+    ]
+  },
+  {
+    "frame_id": 150,
+    "detections": []
+  },
+  {
+    "frame_id": 175,
+    "detections": []
+  },
+  {
+    "frame_id": 200,
+    "detections": []
+  },
+  {
+    "frame_id": 225,
+    "detections": []
+  },
+  {
+    "frame_id": 250,
+    "detections": []
+  },
+  {
+    "frame_id": 275,
+    "detections": []
+  }
+]
